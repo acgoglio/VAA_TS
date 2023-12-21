@@ -21,7 +21,7 @@ mpl.use('Agg')
 #####################################
 
 # -- Workdir path -- 
-workdir = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_atm_ts_new2/'
+workdir = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_atm_ts_new/'
 
 # -- Period --
 start_date = 20191112 #12 #09
@@ -34,7 +34,7 @@ time_p = 'allp'
 obs_interp_flag = 0
 
 # ---  Input archive ---
-input_dir          = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_atm_ts_new2/'
+input_dir          = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_atm_ts_new/'
 #
 input_tg   = ['ISMAR_TG']
 input_dat  = ['mod_atm','obs_atm'] # Do not change the order because the obs are used as reference for offset and differences!
@@ -62,7 +62,7 @@ for tg_idx,tg in enumerate(input_tg):
         # OBS
         if dat == 'obs_atm':
            # input files name
-           file_to_open = input_dir+'/'+tg+'_'+dat+'_00.csv' #+'.nc'
+           file_to_open = input_dir+'/'+tg+'_'+dat+'.csv' #+'.nc'
            print ('Open files: ',file_to_open)
            # check the existence of the file and open it
            if glob.glob(file_to_open):
@@ -191,11 +191,10 @@ for tg_idx,tg in enumerate(input_tg):
     fig.add_subplot(111)
     gs = fig.add_gridspec(1, 3)
     ax = plt.subplot(gs[0, :-1])
-
     # OBS
     alltimes_obs_frommod = np.arange(alltimes_mod_tmp[0],alltimes_mod_tmp[-1], timedelta(hours=1)).astype(datetime)
     min_val=np.min(var_obs[:-3])
-    ax.plot(alltimes_obs_frommod[47:-1],var_obs[:-3],'-',color='red',label='OBS '+' (min: '+str(int(min_val))+' hPa)',linewidth=3)
+    ax.plot(alltimes_obs_frommod,var_obs[:-3],'-',color='red',label='OBS '+' (min: '+str(int(min_val))+' hPa)',linewidth=3)
 
     # Line index
     idx_line_plot = 0

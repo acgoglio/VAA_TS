@@ -70,7 +70,7 @@ set -x
 
         FOUND_NUM=0
         NOT_FOUND_NUM=0
-        if [[ -e ${ANA_INPATHS[$IDX_IN]}/$ANA_INFILE ]]; then 
+        if [[ ! -e ${ANA_INPATHS[$IDX_IN]}/$ANA_INFILE ]]; then 
            FOUND_NUM=$(( $FOUND_NUM + 1 ))
            if [[ ${MOD_FLAG} != 0 ]]; then
               echo "Found infile: $ANA_INFILE"
@@ -199,7 +199,6 @@ set -x
       # Extraction
       IDX_NC=0
       for TSEXT in $EXT_INS; do
-      echo "Prova $EXT_INS"
 
         # nearest 4 POINTS (if land)
         if [[ $EXTR_POINT_NUM == 4 ]]; then
@@ -210,7 +209,7 @@ set -x
               cdo expr,"${VAR}=${VAR}*1" allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
            else
               # Extract V10 and U10 and compute the res
-              cdo expr,"${VAR}=sqrt(U10M*U10M+V10M*V10M);U10M;V10M" allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
+              cdo expr,"${VAR}=sqrt(U10M*U10M+V10M*V10M)" allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
            fi
            rm -v allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
 
@@ -229,7 +228,7 @@ set -x
               cdo expr,"${VAR}=${VAR}*1" allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
            else
               # Extract V10 and U10 and compute the res
-              cdo expr,"${VAR}=sqrt(U10M*U10M+V10M*V10M);U10M;V10M" allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
+              cdo expr,"${VAR}=sqrt(U10M*U10M+V10M*V10M)" allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
            fi
            rm -v red_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc
            rm -v nnmiss_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc

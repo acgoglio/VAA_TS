@@ -210,7 +210,7 @@ set -x
               cdo expr,"${VAR}=${VAR}*1" allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
            else
               # Extract V10 and U10 and compute the res
-              cdo expr,"${VAR}=sqrt(U10M*U10M+V10M*V10M);U10M;V10M" allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
+              cdo expr,"${VAR}=sqrt(U10M*U10M+V10M*V10M)" allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
            fi
            rm -v allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
 
@@ -229,7 +229,7 @@ set -x
               cdo expr,"${VAR}=${VAR}*1" allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
            else
               # Extract V10 and U10 and compute the res
-              cdo expr,"${VAR}=sqrt(U10M*U10M+V10M*V10M);U10M;V10M" allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
+              cdo expr,"${VAR}=sqrt(U10M*U10M+V10M*V10M)" allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
            fi
            rm -v red_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc
            rm -v nnmiss_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc

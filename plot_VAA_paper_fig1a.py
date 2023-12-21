@@ -21,16 +21,17 @@ mpl.use('Agg')
 #####################################
 
 # -- Workdir path -- 
-workdir = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_plots_new/' # _00cent
+workdir = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_plots_new2/' # _00cent
 
 # -- Period --
 start_date = 20191111 #12 #09
-end_date   = 20191157 #13 #17
+end_date   = 20191115 #13 #17
 
 mod_mean6  = -0.0995  # Mean over Nov 2019 run EAS6_AN_w10 in ISMAR_TG
 mod_mean5  = -0.0992  # Mean over Nov 2019 run EAS5_AN_w10 in ISMAR_TG
 tpxo_mean  = -0.0004  # Mean over Nov 2019 tpxo in ISMAR_TG
 obs_mean   = 0.7524  # Mean over Nov 2019 obs in ISMAR_TG (Manu's value: 0.67 )
+#obs_mean   = 0.79 # Mean over 11-15 Nov 2019 obs in ISMAR_TG
 
 # length of the time interval to be plotted: allp, zoom or super-zoom or osr5
 time_p = 'osr5'
@@ -48,8 +49,8 @@ tpxo2_ts           = 'ISMAR_TG_tpxo_Manu.txt' # TMP
 #
 input_tg   = ['ISMAR_TG']
 input_dat  = ['obs','mod'] # Do not change the order because the obs are used as reference for offset and differences!
-input_type = ['FC1','FC2','FC3','AN']
-input_res  = ['08','08_12','10'] # Do not change the order  '08','08sub','08_12','10'
+input_type = ['FC1','FC2','FC3'] #,'AN']
+input_res  = ['10'] #['08','08_12','10'] # Do not change the order  '08','08sub','08_12','10'
 input_sys  = ['EAS5','EAS6']
 
 input_var     = 'sossheig' 
@@ -72,7 +73,7 @@ var_tpxo2 = np.array(var_tpxo2)
 for tg_idx,tg in enumerate(input_tg):
 
     # Output file
-    fig_name = workdir+'/'+tg+'_'+time_p+'_oldtpxo.png'
+    fig_name = workdir+'/'+tg+'_'+time_p+'_paper_Fig1a.png'
 
     # Loop on datasets
     for dat_idx,dat in enumerate(input_dat):
@@ -82,7 +83,8 @@ for tg_idx,tg in enumerate(input_tg):
            # input files name
            file_to_open = input_dir+'/'+tg+'_'+dat+'.csv' #+'.nc'+'_00.csv'
            file_to_open_long = input_dir+'/'+tg+'_'+dat+'_long.csv'
-           print ('Open files: ',file_to_open,file_to_open_long)
+           file_to_open_Hfreq = input_dir+'/'+tg+'_'+dat+'_10min.csv'
+           print ('Open files: ',file_to_open,file_to_open_long,file_to_open_Hfreq)
            # check the existence of the file and open it
            if glob.glob(file_to_open):
               #fh = ncdf.Dataset(file_to_open,mode='r')
@@ -134,6 +136,28 @@ for tg_idx,tg in enumerate(input_tg):
               #fh.close()
            else:
               print ('NOT Found!')  
+           # Read high freq obs
+           if glob.glob(file_to_open_Hfreq):
+              fh_Hfreq = pd.read_csv(file_to_open_Hfreq,sep=';',comment='#',header=None)
+              # Read time axes and compute time-var
+              #time_obs   = fh.variables[input_obs_timevar][:]
+              #time_obs_units = fh.variables[input_obs_timevar].getncattr('units')
+              #alltimes_obs=[]
+              #for alltime_idx in range (0,len(time_obs)):
+              #    alltimes_obs.append(datetime(ncdf.num2date(time_obs[alltime_idx],time_obs_units).year,ncdf.num2date(time_obs[alltime_idx],time_obs_units).month,ncdf.num2date(time_obs[alltime_idx],time_obs_units).day,ncdf.num2date(time_obs[alltime_idx],time_obs_units).hour,ncdf.num2date(time_obs[alltime_idx],time_obs_units).minute,ncdf.num2date(time_obs[alltime_idx],time_obs_units).second))
+              alltimes_obs = fh_Hfreq[0][:]
+
+              # Read obs time series
+              #var_obs  = fh.variables[input_var][:]
+              var_obs_Hfreq = fh_Hfreq[1][:] #*100.0
+              var_obs_Hfreq = np.array(var_obs_Hfreq)
+              # Interpolate from :00 to :30
+              #if obs_interp_flag == 1:
+              #   where_to_interp = np.linspace(0.5,float(len(var_obs))+0.5,len(var_obs))
+              #   interp_obs = np.interp(linspace(0.5,len(var_obs)+0.5,len(var_obs)),range(0,len(var_obs)),var_obs)
+              #   var_obs = interp_obs
+              # TMP:
+              var_obs_Hfreq = var_obs_Hfreq[0:len(var_obs)*6]
         # MOD
         elif dat == 'mod':
             # Loop on system versions
@@ -156,8 +180,14 @@ for tg_idx,tg in enumerate(input_tg):
                            time_mod   = fh.variables[input_mod_timevar][:]
                            time_mod_units = fh.variables[input_mod_timevar].getncattr('units')
                            globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]=[]
+                           globals()['alltimes_mod_Hfreq_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]=[]
+                           print ('len(time_mod)',len(time_mod))
                            for alltime_idx in range (0,len(time_mod)):
                                globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res].append(datetime(ncdf.num2date(time_mod[alltime_idx],time_mod_units).year,ncdf.num2date(time_mod[alltime_idx],time_mod_units).month,ncdf.num2date(time_mod[alltime_idx],time_mod_units).day,ncdf.num2date(time_mod[alltime_idx],time_mod_units).hour,ncdf.num2date(time_mod[alltime_idx],time_mod_units).minute,ncdf.num2date(time_mod[alltime_idx],time_mod_units).second))
+                           # Obs are in CET while Mod is in UTC
+                           #for alltime_idx in range (2,len(time_mod)):
+                               for hfreq_idx in range(0,60,10):
+                                   globals()['alltimes_mod_Hfreq_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res].append(datetime(ncdf.num2date(time_mod[alltime_idx],time_mod_units).year,ncdf.num2date(time_mod[alltime_idx],time_mod_units).month,ncdf.num2date(time_mod[alltime_idx],time_mod_units).day,ncdf.num2date(time_mod[alltime_idx],time_mod_units).hour,ncdf.num2date(hfreq_idx*60,time_mod_units).minute,ncdf.num2date(time_mod[alltime_idx],time_mod_units).second))
                            # Read mod time series
                            fh = ncdf.Dataset(file_to_open+'_ok.nc',mode='r')
                            globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]  = fh.variables[input_var][:] 
@@ -188,8 +218,14 @@ for tg_idx,tg in enumerate(input_tg):
                            time_mod   = fh.variables[input_mod_timevar][:]
                            time_mod_units = fh.variables[input_mod_timevar].getncattr('units')
                            globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]=[]
+                           globals()['alltimes_mod_Hfreq_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]=[]
+
                            for alltime_idx in range (0,len(time_mod)):
                                globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res].append(datetime(ncdf.num2date(time_mod[alltime_idx],time_mod_units).year,ncdf.num2date(time_mod[alltime_idx],time_mod_units).month,ncdf.num2date(time_mod[alltime_idx],time_mod_units).day,ncdf.num2date(time_mod[alltime_idx],time_mod_units).hour,ncdf.num2date(time_mod[alltime_idx],time_mod_units).minute,ncdf.num2date(time_mod[alltime_idx],time_mod_units).second))
+                           # Obs are in CET while Mod is in UTC
+                           #for alltime_idx in range (2,len(time_mod)):
+                               for hfreq_idx in range(0,60,10):
+                                   globals()['alltimes_mod_Hfreq_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res].append(datetime(ncdf.num2date(time_mod[alltime_idx],time_mod_units).year,ncdf.num2date(time_mod[alltime_idx],time_mod_units).month,ncdf.num2date(time_mod[alltime_idx],time_mod_units).day,ncdf.num2date(time_mod[alltime_idx],time_mod_units).hour,ncdf.num2date(hfreq_idx*60,time_mod_units).minute,ncdf.num2date(time_mod[alltime_idx],time_mod_units).second))
                            # Read mod time series
                            fh = ncdf.Dataset(file_to_open,mode='r')
                            globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]  = fh.variables[input_var][:]
@@ -218,7 +254,7 @@ for tg_idx,tg in enumerate(input_tg):
 
 
 ######## PLOT TS ONLY SSH#########
-fig_name = workdir+'/SSH_'+tg+'_'+time_p+'.png'
+fig_name = workdir+'/SSH_'+tg+'_paper_Fig1a.png'
 
 # Loop on tide-gauges
 for tg_idx,tg in enumerate(input_tg):
@@ -246,7 +282,7 @@ for tg_idx,tg in enumerate(input_tg):
                     # Loop on atm forcing resolutions
                     for res_idx,res in enumerate(input_res):
 
-                        if res == '08_12' and easys == 'EAS5' and (atype == 'FC1' or atype == 'FC2' or atype == 'FC3'):
+                        if res == '10' and easys == 'EAS6' and (atype == 'FC1' or atype == 'FC2' or atype == 'FC3'): #res == '08_12' and easys == 'EAS5' and (atype == 'FC1' or atype == 'FC2' or atype == 'FC3'):
                            if atype == 'FC1':
                               labels='1st day fcst'
                            elif atype == 'FC2':
@@ -258,7 +294,6 @@ for tg_idx,tg in enumerate(input_tg):
                            try:
                               time4plot = np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])
                               line4plot = np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])
-                              print ('lenght time',len(time4plot))
                               # TMP for old tpxo
                               if easys == 'EAS5' and flag_oldtpxo == 1:
                                  line4plot = line4plot - tpxo_diffs
@@ -267,16 +302,16 @@ for tg_idx,tg in enumerate(input_tg):
 
                            if res == '10' and (atype == 'FC1' or atype == 'FC2' or atype == 'FC3') :
                               peak_max=int(np.max(line4plot[43:48]*100))
-                              ax.plot(time4plot,line4plot*100,':',color=colors[int(atype[2])],label='MEDFS '+labels+' (max: '+str(peak_max)+' cm)',linewidth=3)
+                              ax.plot(time4plot,line4plot*100,'-',color=colors[int(atype[2])],label=labels+' (12 November peak: '+str(peak_max)+' cm)',linewidth=3,zorder=2)
                               alltimes_obsfrommod=np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])
                            elif res == '08' and (atype == 'FC1' or atype == 'FC2' or atype == 'FC3') :
                                  peak_max=int(np.max(line4plot[43:48]*100))
-                                 ax.plot(time4plot,line4plot*100,'--',color=colors[int(atype[2])],label='MEDFS '+labels+' (max: '+str(peak_max)+' cm)',linewidth=3)
+                                 ax.plot(time4plot,line4plot*100,'--',color=colors[int(atype[2])],label=labels+' (max: '+str(peak_max)+' cm)',linewidth=3)
                                  alltimes_obsfrommod=np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])
                            else:
                               try:
                                  peak_max=int(np.max(line4plot[43:48]*100))
-                                 ax.plot(time4plot,line4plot*100,color=colors[int(atype[2])],label='MEDFS '+labels+' (max: '+str(peak_max)+' cm)',linewidth=3)
+                                 ax.plot(time4plot,line4plot*100,color=colors[int(atype[2])],label=labels+' (max: '+str(peak_max)+' cm)',linewidth=3)
                                  alltimes_obsfrommod=np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])
                               except:
                                  print (' ')
@@ -285,12 +320,23 @@ for tg_idx,tg in enumerate(input_tg):
 
     # OBS
     peak_max=int(np.max(var_obs*100))
+    obs_H_mean=round(np.nanmean(var_obs)*100,2)
     #ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),var_obs,'o-',color='black',label='OBS',linewidth=1.5)
-    ax.plot(alltimes_obsfrommod,var_obs*100,'-',color=colors[0],label='OBS'+' (max: '+str(peak_max)+' cm)',linewidth=3)
+    ax.plot(alltimes_obsfrommod,var_obs*100,'-',color=colors[0],label='Hourly OBS'+' (max: '+str(peak_max)+' cm)',linewidth=3,zorder=1)
+
+    # High freq OBS
+    obs_Hfreq_max=int(np.max(var_obs_Hfreq)*100)
+    obs_Hfreq_mean=round(np.nanmean(var_obs_Hfreq[0:len(var_obs)*6])*100,2)
+    #print ('obs_Hfreq_max',obs_Hfreq_max)
+    #print ('obs_H_mean,obs_Hfreq_mean',obs_H_mean,obs_Hfreq_mean)
+    # WARNING: Obs are CET and meters while Mod is UTC and the plot is in cm.. 
+    ax.plot(np.squeeze(globals()['alltimes_mod_Hfreq_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])[0:-6],var_obs_Hfreq[6:]*100,'o-',color='orange',label='High Freq. OBS (max='+str(obs_Hfreq_max)+' cm)',linewidth=3,zorder=0)
+
     if flag_oldtpxo != 1:
        ax.plot(alltimes_obsfrommod,(np.squeeze(tpxo_sig_mean)+obs_mean)*100,'--',color=colors[4],label='Tides TPXO',linewidth=2)
     else: 
        ax.plot(alltimes_obsfrommod,(np.squeeze(tpxo_sig_mean)+obs_mean-tpxo_diffs)*100,'--',color=colors[4],label='Tides TPXO',linewidth=2)
+
     # Add Nov MSL line
     #plt.axhline(obs_mean,color='black',label='November MSL = '+str(round(obs_mean,2))+' m',linewidth=1)
 
@@ -302,7 +348,7 @@ for tg_idx,tg in enumerate(input_tg):
     box = ax.get_position()
     #ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
     #leg = plt.legend(loc='center left', bbox_to_anchor=(1, 0.5), ncol=2,  shadow=True, fancybox=True, fontsize=12)
-    leg = plt.legend(loc='lower right', ncol=2,  shadow=True, fancybox=True, fontsize=16)
+    leg = plt.legend(loc='lower right', ncol=2,  shadow=True, fancybox=True,framealpha=0.2,fontsize=15)
     ##leg.get_frame().set_alpha(0.3)
     ax.grid('on')
 

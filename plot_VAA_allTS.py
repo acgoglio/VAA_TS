@@ -21,7 +21,7 @@ mpl.use('Agg')
 #####################################
 
 # -- Workdir path -- 
-workdir = '/work/oda/med_dev/Venezia_Acqua_Alta_HH/FCall_SSH/'
+workdir = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_plots_new/'
 
 # -- Period --
 start_date = 20191109 #12 #09
@@ -33,19 +33,19 @@ tpxo_mean  = -0.0004  # Mean over Nov 2019 tpxo in ISMAR_TG
 obs_mean   =  0.7524  # Mean over Nov 2019 obs in ISMAR_TG
 
 # length of the time interval to be plotted: allp, zoom or super-zoom
-time_p = 'all_p'
+time_p = 'zoom'
 
 # To interpolate the obs from hh:00 to hh:30 and plot mod-obs diffs
 obs_interp_flag = 1
 
 # ---  Input archive ---
-input_dir          = '/work/oda/med_dev/Venezia_Acqua_Alta_HH/FCall_SSH/'
+input_dir          = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_sea_level/'
 tpxo_ts            = 'ISMAR_TG_tpxo.nc'
 #
 input_tg   = ['ISMAR_TG']
 input_dat  = ['obs','mod'] # Do not change the order because the obs are used as reference for offset and differences!
-input_type = ['FCall_20191110'] #['AN','FCall_20191109','FCall_20191110','FCall_20191111','FCall_20191112','FCall_20191113','FCall_20191114','FCall_20191115'] # Leadtime of the forecasts
-input_res  = ['08','10'] #['08','08sub','10'] # Do not change the order 
+input_type = ['AN','FCall_20191109','FCall_20191110','FCall_20191111','FCall_20191112','FCall_20191113','FCall_20191114','FCall_20191115'] # Leadtime of the forecasts
+input_res  = ['08'] #,'08sub','10'] # Do not change the order 
 input_sys  = ['EAS5','EAS6']
 
 input_var     = 'sossheig' 
@@ -90,11 +90,9 @@ for tg_idx,tg in enumerate(input_tg):
               var_obs = np.array(var_obs)
               # Interpolate from :00 to :30
               if obs_interp_flag == 1:
-                 where_to_interp = np.linspace(0.5,float(len(var_obs))+0.5,len(var_obs))
-                 interp_obs = np.interp(linspace(0.5,len(var_obs)+0.5,len(var_obs)),range(0,len(var_obs)),var_obs)
+                 where_to_interp = np.linspace(0.5,float(len(var_obs))+0.5,216)
+                 interp_obs = np.interp(linspace(0.5,len(var_obs)+0.5,216),range(0,len(var_obs)),var_obs)
                  var_obs = interp_obs
-              # TMP:
-              var_obs = var_obs[0:144]
 
               # Currently the values to compute the offset are obtained externally and passed as vars
               ## Read the mean of the obs (to compute the offset)
@@ -163,7 +161,7 @@ for tg_idx,tg in enumerate(input_tg):
                               globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]  = globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]+tpxo_sig+offset5-offset6-tpxo_mean
 
                            # Compute the differences wrt obs
-                           globals()['diff_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]=np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])-var_obs # 
+                           globals()['diff_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]=np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])-var_obs
                            # Close infile
                            fh.close()
                         elif glob.glob(file_to_open):

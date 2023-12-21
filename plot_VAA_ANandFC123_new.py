@@ -21,7 +21,7 @@ mpl.use('Agg')
 #####################################
 
 # -- Workdir path -- 
-workdir = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_plots_new_3dayfcst/'
+workdir = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_plots_new/'
 
 # Offset computed over Nov 2019
 mod_mean6  = -0.0995  # Mean over Nov 2019 run EAS6_AN_w10 in ISMAR_TG
@@ -45,15 +45,15 @@ flag_add_tides = 1
 flag_oldtpxo = 0
 
 # ---  Input archive ---
-input_dir          = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_sea_level_3dayfcst/' 
+input_dir          = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_sea_level/' 
 tpxo_ts            = 'ISMAR_TG_tpxo.nc'
 tpxo2_ts           = 'ISMAR_TG_tpxo_Manu.txt' # TMP 
 tpxo3_ts           = 'ISMAR_TG_tpxo_inst.txt' # TMP 
 #
 input_tg   = ['ISMAR_TG']
 input_dat  = ['obs','mod'] # Do not change the order because the obs are used as reference for offset and differences!
-input_type = ['FC3'] #['FC1','FC2','FC3','AN']
-input_res  = ['08','10'] #['08','08_12','10'] # Do not change the order  '08','08sub','08_12','10'
+input_type = ['FC1','FC2','FC3','AN']
+input_res  = ['08','08_12','10'] # Do not change the order  '08','08sub','08_12','10'
 input_sys  = ['EAS5','EAS6']
 
 input_var     = 'sossheig' 
@@ -63,12 +63,9 @@ input_mod_timevar = 'time_counter'
 
 # Color
 #colors = pl.cm.jet_r(np.linspace(0,1,24))
-colors_5 = pl.cm.Blues(np.linspace(0.2,1,11))
-colors_6 = pl.cm.Greens(np.linspace(0.2,1,8))
+colors_5 = pl.cm.Blues(np.linspace(0.2,1,12))
+colors_6 = pl.cm.Greens(np.linspace(0.2,1,12))
 colors = np.vstack((colors_5, colors_6))
-
-# TMP:
-colors = pl.cm.jet(np.linspace(0,1,6))
 #############################
 # TMP tpxo 2: 
 fh2 = pd.read_csv(input_dir+'/'+tpxo2_ts,sep=' ',comment='#',header=None)
@@ -100,7 +97,6 @@ for tg_idx,tg in enumerate(input_tg):
            if glob.glob(file_to_open):
               #fh = ncdf.Dataset(file_to_open,mode='r')
               fh = pd.read_csv(file_to_open,sep=';',comment='#',header=None)
-              fh2 = pd.read_csv(file_to_open_long,sep=';',comment='#',header=None)
               # Read time axes and compute time-var
               #time_obs   = fh.variables[input_obs_timevar][:]
               #time_obs_units = fh.variables[input_obs_timevar].getncattr('units')
@@ -113,11 +109,6 @@ for tg_idx,tg in enumerate(input_tg):
               #var_obs  = fh.variables[input_var][:]
               var_obs = fh[1][:] #*100.0
               var_obs = np.array(var_obs)
-              print ('OBS mean: ',np.mean(var_obs))
-              var_obs_long = fh2[1][:] #*100.0
-              var_obs_long = np.array(var_obs_long)
-              print ('OBS mean long: ',np.mean(var_obs_long))
-
               # Interpolate from :00 to :30
               if obs_interp_flag == 1:
                  where_to_interp = np.linspace(0.5,float(len(var_obs))+0.5,216)
@@ -298,33 +289,18 @@ for tg_idx,tg in enumerate(input_tg):
 
                            if idx_line_plot == 0:
                               # OBS
-                              obs_max=int(np.max(var_obs)*100)
-                              ax.plot(time4plot,var_obs*100,'-',color='red',label='OBS (max='+str(obs_max)+' cm)',linewidth=3)
+                              ax.plot(time4plot,var_obs*100,'-',color='red',label='OBS',linewidth=3)
                               print ('Obs',int(np.max(var_obs)*100),int(np.max(var_obs[96:120])*100))
 
-                           # print the max for peak 1
-                           name2print=easys+'_'+atype+'_w'+res
-                           max2print=int(np.max(line4plot[43:48]*100))
-                           diff2print=max2print-obs_max
-                           # print the max for peak 2
-                           max2print_15=int(np.max(line4plot[96:120]*100))
-                           print (name2print,max2print,max2print_15)
-
                            if res == '10' and (atype == 'FC1' or atype == 'FC2' or atype == 'FC3') :
-                              ax.plot(time4plot,line4plot*100,':',color=colors[idx_line_plot],label=easys+'_'+atype+'_w'+res+' (diff wrt Obs = '+str(diff2print)+' cm)',linewidth=3)
+                              ax.plot(time4plot,line4plot*100,':',color=colors[idx_line_plot],label=easys+'_'+atype+'_w'+res,linewidth=3)
                               #ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),':',color=colors[idx_line_plot],label=easys+'_'+atype+'_w'+res,linewidth=1.5)
-                           elif (easys == 'EAS6' and res == '08_12') or (res == '08_12' and atype == 'AN'):
-                                print ('#')
-                                idx_line_plot = idx_line_plot - 1
-                           elif res == '08_12' and easys == 'EAS5' and (atype == 'FC1' or atype == 'FC2' or atype == 'FC3') :
-                                 # EAS5_w08_12 -> EAS4_w08
-                                 ax.plot(time4plot,line4plot*100,'--',color=colors[idx_line_plot],label='EAS4_'+atype+'_w08'+' (diff wrt Obs = '+str(diff2print)+' cm)',linewidth=3)
-                           elif (res == '08' ) and (atype == 'FC1' or atype == 'FC2' or atype == 'FC3') :
-                                 ax.plot(time4plot,line4plot*100,'--',color=colors[idx_line_plot],label=easys+'_'+atype+'_w'+res+' (diff wrt Obs = '+str(diff2print)+' cm)',linewidth=3)
+                           elif (res == '08' or res == '08_12') and (atype == 'FC1' or atype == 'FC2' or atype == 'FC3') :
+                                 ax.plot(time4plot,line4plot*100,'--',color=colors[idx_line_plot],label=easys+'_'+atype+'_w'+res,linewidth=3)
                                  #ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),'--',color=colors[idx_line_plot],label=easys+'_'+atype+'_w'+res,linewidth=1.5)
                            else:
                               try:
-                                 ax.plot(time4plot,line4plot*100,color=colors[idx_line_plot],label=easys+'_'+atype+'_w'+res+' (diff wrt Obs = '+str(diff2print)+' cm)',linewidth=3)
+                                 ax.plot(time4plot,line4plot*100,color=colors[idx_line_plot],label=easys+'_'+atype+'_w'+res,linewidth=3)
                                  #ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),color=colors[idx_line_plot],label=easys+'_'+atype+'_w'+res,linewidth=1.5)
                               except:
                                  print (' ')
@@ -332,6 +308,12 @@ for tg_idx,tg in enumerate(input_tg):
                            # Update line in plot index
                            idx_line_plot = idx_line_plot + 1
 
+                           # print the max for peak 1
+                           name2print=easys+'_'+atype+'_w'+res
+                           max2print=int(np.max(line4plot[43:48]*100))
+                           # print the max for peak 2
+                           max2print_15=int(np.max(line4plot[96:120]*100))
+                           print (name2print,max2print,max2print_15)               
                         ## Update line in plot index
                         #idx_line_plot = idx_line_plot + 1
 

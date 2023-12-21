@@ -51,12 +51,6 @@ colors = pl.cm.jet_r(np.linspace(0,1,13)) #13
 colors = pl.cm.Purples(np.linspace(0.1,0.9,13))
 
 #############################
-# Defn running mean for obs
-def running_mean(x, N):
-    cumsum = np.cumsum(np.insert(x, 0, 0))
-    return (cumsum[N:] - cumsum[:-N]) / float(N)
-
-
 # Loop on tide-gauges
 for tg_idx,tg in enumerate(input_tg):
 
@@ -88,10 +82,6 @@ for tg_idx,tg in enumerate(input_tg):
               #var_obs  = fh.variables[input_var][:]
               var_obs = fh[3][:]
               var_obs = np.array(var_obs) #/ 100.0
-              #print ('Pre',len(var_obs))
-              #var_obs = running_mean(var_obs,12)
-              #var_obs = var_obs[::12]
-              #print ('Post',len(var_obs))
               # Interpolate from :00 to :30
               if obs_interp_flag == 1:
                  where_to_interp = np.linspace(0.5,float(len(var_obs))+0.5,216)
@@ -265,7 +255,7 @@ for tg_idx,tg in enumerate(input_tg):
        ax.xaxis.set_minor_locator(mdates.HourLocator((6,12,18)))
        ax.xaxis.set_major_formatter(mdates.DateFormatter("\n%d"))
        ax.margins(x=0)
-       plt.ylim(0,30)
+       plt.ylim(0,20)
     elif time_p == 'zoom' :
        plt.xlim([datetime(2019,11,12,0,0,0),datetime(2019,11,13,23,30,0)])
        plt.xlabel ('November 2019',fontsize=18)

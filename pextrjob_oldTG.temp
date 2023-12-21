@@ -70,16 +70,15 @@ set -x
 
         FOUND_NUM=0
         NOT_FOUND_NUM=0
-        if [[ -e ${ANA_INPATHS[$IDX_IN]}/$ANA_INFILE ]]; then 
+        if [[ -e ${ANA_INPATHS[$IDX_IN]}/${IDX_DATE:0:6}/$ANA_INFILE ]]; then 
            FOUND_NUM=$(( $FOUND_NUM + 1 ))
            if [[ ${MOD_FLAG} != 0 ]]; then
               echo "Found infile: $ANA_INFILE"
-              ln -sf ${ANA_INPATHS[$IDX_IN]}/$ANA_INFILE .
-              #ncdump -h $ANA_INFILE 
+              ln -sf ${ANA_INPATHS[$IDX_IN]}/${IDX_DATE:0:6}/$ANA_INFILE .
            fi
         else
            NOT_FOUND_NUM=$(( $NOT_FOUND_NUM + 1 ))
-           echo "NOT Found infile: $ANA_INFILE in path: ${ANA_INPATHS[$IDX_IN]}/"
+           echo "NOT Found infile: $ANA_INFILE in path: ${ANA_INPATHS[$IDX_IN]}/${IDX_DATE:0:6}/"
         fi
 
       FOUNDNOTFOUND_NUM=$(( ${FOUNDNOTFOUND_NUM} +1 ))
@@ -199,20 +198,12 @@ set -x
       # Extraction
       IDX_NC=0
       for TSEXT in $EXT_INS; do
-      echo "Prova $EXT_INS"
 
         # nearest 4 POINTS (if land)
         if [[ $EXTR_POINT_NUM == 4 ]]; then
         # Point selection With land/sea mask (Nan)
            cdo setctomiss,0.0000 $TSEXT miss_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc
-           cdo -remapdis,lon=${COO_TS_LON[$TS_IDX]}/lat=${COO_TS_LAT[$TS_IDX]} miss_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
-           if [[ ${VAR} != "W10" ]]; then
-              cdo expr,"${VAR}=${VAR}*1" allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
-           else
-              # Extract V10 and U10 and compute the res
-              cdo expr,"${VAR}=sqrt(U10M*U10M+V10M*V10M);U10M;V10M" allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
-           fi
-           rm -v allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
+           cdo -remapdis,lon=${COO_TS_LON[$TS_IDX]}/lat=${COO_TS_LAT[$TS_IDX]} miss_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
 
         # nearest sea point
         elif [[ $EXTR_POINT_NUM == 1 ]]; then
@@ -224,16 +215,9 @@ set -x
            cdo setctomiss,0.0000 red_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc miss_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc
 
            cdo setmisstonn miss_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc nnmiss_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc
-           cdo -remapnn,lon=${COO_TS_LON[$TS_IDX]}/lat=${COO_TS_LAT[$TS_IDX]} nnmiss_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
-           if [[ ${VAR} != "W10" ]]; then
-              cdo expr,"${VAR}=${VAR}*1" allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
-           else
-              # Extract V10 and U10 and compute the res
-              cdo expr,"${VAR}=sqrt(U10M*U10M+V10M*V10M);U10M;V10M" allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
-           fi
+           cdo -remapnn,lon=${COO_TS_LON[$TS_IDX]}/lat=${COO_TS_LAT[$TS_IDX]} nnmiss_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
            rm -v red_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc
            rm -v nnmiss_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc
-           rm -v allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
         fi
 
         IDX_NC=$(( ${IDX_NC} + 1 ))

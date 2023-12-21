@@ -21,7 +21,7 @@ mpl.use('Agg')
 #####################################
 
 # -- Workdir path -- 
-workdir = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_atm_ts_new_2022_2/'
+workdir = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_atm_ts_new_2022/'
 
 # -- Period --
 start_date = 20221120 #12 #09
@@ -34,10 +34,10 @@ time_p = 'allp'
 obs_interp_flag = 0
 
 # ---  Input archive ---
-input_dir          = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_atm_ts_new_2022_2/'
+input_dir          = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_atm_ts_new_2022/'
 #
 input_tg   = ['ISMAR_TG']
-input_dat  = ['mod_atm','obs_atm'] # Do not change the order because the obs are used as reference for offset and differences!
+input_dat  = ['mod_atm','obs_atm_false'] # Do not change the order because the obs are used as reference for offset and differences!
 input_type = ['FC1','FC2','FC3'] #,'AN']
 input_res  = ['10'] #['08','08sub','10'] # Do not change the order 
 input_sys  = ['EAS56'] #['EAS4','EAS5','EAS6','EAS56'] # The last must be 'EAS56'
@@ -51,11 +51,6 @@ input_mod_timevar = 'time'
 colors = pl.cm.Greys(np.linspace(0.5,0.9,3)) #13
 
 #############################
-# Defn running mean for obs
-def running_mean(x, N):
-    cumsum = np.cumsum(np.insert(x, 0, 0))
-    return (cumsum[N:] - cumsum[:-N]) / float(N)
-
 # Loop on tide-gauges
 for tg_idx,tg in enumerate(input_tg):
 
@@ -66,9 +61,9 @@ for tg_idx,tg in enumerate(input_tg):
     for dat_idx,dat in enumerate(input_dat):
 
         # OBS
-        if dat == 'obs_atm':
+        if dat == 'obs_atm_false':
            # input files name
-           file_to_open = input_dir+'/'+tg+'_'+dat+'_0000.csv' #+'.nc'
+           file_to_open = input_dir+'/'+tg+'_'+dat+'.csv' #+'.nc'
            print ('Open files: ',file_to_open)
            # check the existence of the file and open it
            if glob.glob(file_to_open):
@@ -87,10 +82,6 @@ for tg_idx,tg in enumerate(input_tg):
               #var_obs  = fh.variables[input_var][:]
               var_obs = fh[1][:] #*100.0
               var_obs = np.array(var_obs)
-              #print ('Pre',len(var_obs))
-              #var_obs = running_mean(var_obs,12)
-              #var_obs = var_obs[::12]
-              #print ('Post',len(var_obs))
               # Interpolate from :00 to :30
               if obs_interp_flag == 1:
                  where_to_interp = np.linspace(0.5,float(len(var_obs))+0.5,216)
@@ -209,7 +200,7 @@ for tg_idx,tg in enumerate(input_tg):
     # OBS
     alltimes_obs_frommod = np.arange(alltimes_mod_tmp[0],alltimes_mod_tmp[-1], timedelta(hours=1)).astype(datetime)
     min_val=np.min(var_obs[:-3])
-    ax.plot(alltimes_obs_frommod[:],var_obs[:-3],'-',color='red',label='OBS '+' (min: '+str(int(min_val))+' hPa)',linewidth=3)
+    ax.plot(alltimes_obs_frommod,var_obs[:-3],'-',color='red',label='OBS '+' (min: '+str(int(min_val))+' hPa)',linewidth=3)
 
     # Line index
     idx_line_plot = 0
@@ -255,11 +246,11 @@ for tg_idx,tg in enumerate(input_tg):
                               linetype=':'
                            
                            if atype == 'FC1':
-                              ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res][1:113]),np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res][0:111]),linetype,color=colors[idx_line_plot],label=labels,linewidth=3) 
+                              ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res][0:112]),np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res][0:112]),linetype,color=colors[idx_line_plot],label=labels,linewidth=3) 
                            elif atype == 'FC2':
-                              ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res][1:112]),np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res][0:111]),linetype,color=colors[idx_line_plot],label=labels,linewidth=3)
+                              ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res][0:112]),np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res][0:112]),linetype,color=colors[idx_line_plot],label=labels,linewidth=3)
                            elif atype == 'FC3':
-                              ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res][1:112]),np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res][0:111]),linetype,color=colors[idx_line_plot],label=labels,linewidth=3)
+                              ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res][0:112]),np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res][0:112]),linetype,color=colors[idx_line_plot],label=labels,linewidth=3)
                            # Update line in plot index
                            idx_line_plot = idx_line_plot + 1
 
