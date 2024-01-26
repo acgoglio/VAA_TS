@@ -14,12 +14,5 @@
 # (wind.sh is the script that was used to compute the wind spead for wind maps)
 # (MSLconversion.sh is the script to convert MSL Pressure from hPa to Pa)
 # (max_ts.sh is the script to extract the max values)
-
-# TMP EAS4 FC :
-# 09 --> /data/oda/ec04916/DATA/FCST_AcquaAlta/Atmo/ECMWF/20191109/20191109_20191119-ECMWF---AM0125-MEDATL-b20191109_fc12-fv06.00.nc
-# 10 --> /data/oda/ec04916/DATA/FCST_AcquaAlta/Atmo/ECMWF/20191110/20191110_20191120-ECMWF---AM0125-MEDATL-b20191110_fc12-fv06.00.nc
-# 11 --> /data/oda/ec04916/DATA/FCST_AcquaAlta/Atmo/ECMWF/20191111/20191111_20191121-ECMWF---AM0125-MEDATL-b20191111_fc12-fv06.00.nc
-# 12 --> /data/oda/ec04916/DATA/FCST_AcquaAlta/Atmo/ECMWF/20191112/20191112_20191122-ECMWF---AM0125-MEDATL-b20191112_fc12-fv06.00.nc
-# 13 --> /data/oda/ec04916/DATA/FCST_AcquaAlta/Atmo/ECMWF/20191113/20191113_20191123-ECMWF---AM0125-MEDATL-b20191113_fc12-fv06.00.nc
-
+# (plot_VAA_atm_corr.py is to compute the SSH correlation wrt atm fields)
 
