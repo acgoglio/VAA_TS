@@ -21,7 +21,7 @@ mpl.use('Agg')
 #####################################
 
 # -- Workdir path -- 
-workdir = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_plots_new2//'
+workdir = '/work/oda/ag15419/tmp/Venezia_Acqua_Alta/SSH_ISMAR_TG/'
 
 # -- Period --
 start_date = 20191109 #12 #09
@@ -311,20 +311,20 @@ for tg_idx,tg in enumerate(input_tg):
     print ('obs_Hfreq_max',obs_Hfreq_max)
     print ('obs_H_mean,obs_Hfreq_mean',obs_H_mean,obs_Hfreq_mean)
     # HF OBS
-    ax.plot(np.squeeze(globals()['alltimes_mod_Hfreq_'+tg+'_'+dat+'_'+easys+'_'+'FCall_20191110'+'_w'+res])[:-6],var_obs_Hfreq[6:(24*3*6)]*100,'o-',color='orange',label='High Freq. OBS (12 November peak = '+str(obs_Hfreq_max)+' cm)',linewidth=3,zorder=1)
+    #ax.plot(np.squeeze(globals()['alltimes_mod_Hfreq_'+tg+'_'+dat+'_'+easys+'_'+'FCall_20191110'+'_w'+res])[:-6],var_obs_Hfreq[6:(24*3*6)]*100,'o-',color='orange',label='High Freq. OBS (12 November peak = '+str(obs_Hfreq_max)+' cm)',linewidth=3,zorder=1)
 
     # OBS
     #ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])[23+1:],var_obs[23:-1]*100,'o-',color='red',label='Hourly OBS (max='+str(obs_max)+' cm)',linewidth=3,zorder=1)
     ax.plot(np.squeeze(globals()['alltimes_obs_'+tg+'_'+dat+'_'+easys+'_'+'FCall_20191110'+'_w'+res])[:],var_obs[:(24*3)]*100,'o-',color='red',label='Hourly OBS (12 November peak = '+str(obs_max)+' cm)',linewidth=3,zorder=2)
     # Add mean obs offset
-    plt.axhline(obs_mean*100,color='red',linewidth=2,linestyle='dashed',label='Mean OBS',zorder=0)
+    #plt.axhline(obs_mean*100,color='red',linewidth=2,linestyle='dashed',label='Mean OBS',zorder=0)
 
 
     # TPXO
     #ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),(np.squeeze(tpxo_sig)-tpxo_mean+obs_mean)*100,'--',color='black',label='Tides TPXO',linewidth=2)
 
     # Add Extreme flood line +140 cm 
-    plt.axhline(140,color='black',linewidth=2)
+    plt.axhline(140,color='black',linewidth=2) #,label='Extreme Floods Threshold')
 
     # Finalize the plot
     ylabel("Sea Level [cm]",fontsize=18)

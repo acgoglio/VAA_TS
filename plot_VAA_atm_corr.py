@@ -115,3 +115,28 @@ c_prec = np.corrcoef(np.squeeze(ssh_field), np.squeeze(prec_field[0:len(time_ssh
 print ('Corr SSH-Pres',c_pres)
 print ('Corr SSH-Wind',c_wind)
 print ('Corr SSH-Prec',c_prec)
+
+# Compute cumul prec
+cum_prec=[]
+for cum_idx in range(0,len(prec_field[0:len(time_ssh)])):
+    cum_prec.append(np.sum(100*prec_field[0:cum_idx]))
+
+# Plot PREC and SSH
+plt.figure(figsize=(12,6))
+plt.rc('font', size=16)
+plt.title ('SSH and Precipitation time-series')
+plt.plot(alltimes_ssh,np.squeeze(ssh_field),label='SSH [m]')
+#plt.plot(alltimes_ssh,np.squeeze((pres_field[0:len(time_ssh)]-np.mean(np.squeeze(pres_field[0:len(time_ssh)])))/1000),label='MSL /10000 [Pa] ')
+#plt.plot(alltimes_ssh,np.squeeze((wind_field[0:len(time_ssh)]-np.mean(np.squeeze(wind_field[0:len(time_ssh)])))/10),label='W10 /10 [m/s]')
+plt.plot(alltimes_ssh,np.squeeze(1000*prec_field[0:len(time_ssh)]),label='Precipitation [mm/h]')
+plt.plot(alltimes_ssh,cum_prec[0:len(time_ssh)],label='Cum prec [cm]')
+#plt.plot(alltimes_ssh,fit_pr-np.mean(fit_pr),'-',color='red',label='Fit with prec')
+#plt.plot(alltimes_ssh,fit_nopr-np.mean(fit_nopr),'--',color='red',label='Fit without prec')
+plt.grid ()
+#plt.ylabel ('m')
+#plt.xlabel ('November 2019',fontsize=16)
+#plt.xaxis.set_major_formatter(mdates.DateFormatter("\n%d"))
+plt.legend()
+plt.tight_layout()
+plt.savefig(workdir+'SSH_prec.png',format='png')
+plt.clf()

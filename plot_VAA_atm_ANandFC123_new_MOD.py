@@ -21,7 +21,7 @@ mpl.use('Agg')
 #####################################
 
 # -- Workdir path -- 
-workdir = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_atm_ts_new2/'
+workdir = '/work/oda/ag15419/tmp/Venezia_Acqua_Alta_HH/VAA_atm_ts_new3/'
 
 # -- Period --
 start_date = 20191112 #12 #09
@@ -47,7 +47,9 @@ udm           = 'hPa'
 input_mod_timevar = 'time'
 
 # Color
-colors = pl.cm.Greys(np.linspace(0.1,0.9,13)) #13
+#colors = pl.cm.Greys(np.linspace(0.1,0.9,13)) #13
+# TMP:
+colors = ('tab:cyan','tab:blue','darkblue')
 
 #############################
 # Loop on tide-gauges
@@ -179,9 +181,9 @@ for tg_idx,tg in enumerate(input_tg):
 # Loop on tide-gauges
 for tg_idx,tg in enumerate(input_tg):
     # Initialize the plot
-    fig = plt.figure(0,figsize=(20,11))
+    fig = plt.figure(0,figsize=(12,7))
     print ('Plot: ',fig_name)
-    plt.rc('font', size=16)
+    plt.rc('font', size=18)
 #    if obs_interp_flag == 1:
 #       fig.add_subplot(111)
 #       gs = fig.add_gridspec(2, 3)
@@ -195,7 +197,7 @@ for tg_idx,tg in enumerate(input_tg):
     # OBS
     alltimes_obs_frommod = np.arange(alltimes_mod_tmp[0],alltimes_mod_tmp[-1], timedelta(hours=1)).astype(datetime)
     min_val=np.min(var_obs[:-3])
-    ax.plot(alltimes_obs_frommod[47:-1],var_obs[:-3],'-',color='red',label='OBS '+' (min: '+str(int(min_val))+' hPa)',linewidth=3)
+    ax.plot(alltimes_obs_frommod[47:-1],var_obs[:-3],'-o',color='red',label='OBS '+' (min: '+str(int(min_val))+' hPa)',linewidth=3)
 
     # Line index
     idx_line_plot = 0
@@ -239,12 +241,15 @@ for tg_idx,tg in enumerate(input_tg):
                               linetype='--'
                            else:
                               linetype=':'
+                           #ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),linetype,color=colors[idx_line_plot],label=labels,linewidth=3)
+                           ## Update line in plot index
+                           #idx_line_plot = idx_line_plot + 1
 
-                           ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),linetype,color=colors[idx_line_plot],label=labels,linewidth=3) 
-
-
-                           # Update line in plot index
-                           idx_line_plot = idx_line_plot + 1
+                           # TMP:
+                           if easys == 'EAS56' and atype != 'AN' and res == '10' :
+                              ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),'-',color=colors[idx_line_plot],label='ECMWF '+atype+' (min: '+str(int(min_val))+' hPa)',linewidth=3)  
+                              # Update line in plot index
+                              idx_line_plot = idx_line_plot + 1
 
     # Finalize the plot
     ylabel("MSL [hPa]",fontsize=18)
@@ -256,7 +261,7 @@ for tg_idx,tg in enumerate(input_tg):
     ##leg.get_frame().set_alpha(0.3)
     ax.grid('on')
     #plt.axhline(linewidth=2, color='black')
-    plt.title('Mean Sea Level Pressure time-series at '+tg,fontsize=18)
+    plt.title('Mean Sea Level Pressure at '+tg,fontsize=18)
     if time_p == 'allp' :
        plt.xlim([datetime(2019,11,12,0,0,0),datetime(2019,11,15,23,30,0)])
        plt.xlabel ('November 2019',fontsize=18)
