@@ -14,7 +14,7 @@
 #
 #set -u
 set -e
-set -x 
+#set -x 
 ######################################################
 
 # Source ini file
@@ -199,6 +199,7 @@ set -x
       # Extraction
       IDX_NC=0
       for TSEXT in $EXT_INS; do
+        echo "PROVA $TSEXT"
 
         # nearest 4 POINTS (if land)
         if [[ $EXTR_POINT_NUM == 4 ]]; then
@@ -233,11 +234,13 @@ set -x
            rm -v red_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc
            rm -v nnmiss_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc
            rm -v allvar_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_${IDX_NC}.nc
+           echo "QUI 0?"
         fi
-
+        echo "QUI 1?"
         IDX_NC=$(( ${IDX_NC} + 1 ))
+        echo "QUI 2?"
       done
-  
+      echo "QUI 3?"
         # Mean comp
         if [[ ${RM_MEAN_FLAG} == 1 ]]; then
            cdo mergetime tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}_*.nc tsext_tmp_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc

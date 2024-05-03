@@ -11,7 +11,7 @@
 # 5 -> run plot*.py (plot_VAA_allTS.py for AN and FCall; plot_VAA_ANandFC123.py for AN and FC1, FC2 and FC3  )
 #
 # (subsample_atmforc.sh is the script that was used to create atm forcing subsampling from 3h to 6h)
-# (wind.sh is the script that was used to compute the wind spead for wind maps)
+# (wind.sh is the script that was used to compute the wind speed for wind maps)
 # (MSLconversion.sh is the script to convert MSL Pressure from hPa to Pa)
 # (max_ts.sh is the script to extract the max values)
 # (plot_VAA_atm_corr.py is to compute the SSH correlation wrt atm fields)
