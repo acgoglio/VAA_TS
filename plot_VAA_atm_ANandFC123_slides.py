@@ -21,7 +21,7 @@ mpl.use('Agg')
 #####################################
 
 # -- Workdir path -- 
-workdir = '/work/oda/ag15419/tmp/Venezia_Acqua_Alta_HH/VAA_atm_ts_new3/'
+workdir = '/work/cmcc/ag15419/VAA_paper/atm_plots/'
 
 # -- Period --
 start_date = 20191112 #12 #09
@@ -34,7 +34,7 @@ time_p = 'allp'
 obs_interp_flag = 0
 
 # ---  Input archive ---
-input_dir          = '/work/oda/med_dev/Venezia_Acqua_Alta_2019/VAA_atm_ts_new2/'
+input_dir          = '/data/cmcc/ag15419/tmp_med_dev_old/Venezia_Acqua_Alta_2019/VAA_atm_ts_new2/'
 #
 input_tg   = ['ISMAR_TG']
 input_dat  = ['mod_atm','obs_atm'] # Do not change the order because the obs are used as reference for offset and differences!
@@ -48,15 +48,16 @@ input_mod_timevar = 'time'
 
 # Color
 #colors = pl.cm.Greys(np.linspace(0.1,0.9,13)) #13
+obs_color='navy' #'red'
 # TMP:
-colors = ('tab:cyan','tab:blue','darkblue')
+colors = ('tab:orange','tab:orange','tab:orange') #('tab:cyan','tab:blue','darkblue')
 
 #############################
 # Loop on tide-gauges
 for tg_idx,tg in enumerate(input_tg):
 
     # Output file
-    fig_name = workdir+'/'+tg+'_'+time_p+'_atm_new.png' #'zoom.png'
+    fig_name = workdir+'/'+tg+'_'+time_p+'_atm_new_FC3.png' #'zoom.png'
 
     # Loop on datasets
     for dat_idx,dat in enumerate(input_dat):
@@ -197,7 +198,7 @@ for tg_idx,tg in enumerate(input_tg):
     # OBS
     alltimes_obs_frommod = np.arange(alltimes_mod_tmp[0],alltimes_mod_tmp[-1], timedelta(hours=1)).astype(datetime)
     min_val=np.min(var_obs[:-3])
-    ax.plot(alltimes_obs_frommod[47:-1],var_obs[:-3],'-o',color='red',label='OBS '+' (min: '+str(int(min_val))+' hPa)',linewidth=3)
+    ax.plot(alltimes_obs_frommod[47:-1],var_obs[:-3],'-o',color=obs_color,label='OBS '+' (min: '+str(int(min_val))+' hPa)',linewidth=3)
 
     # Line index
     idx_line_plot = 0
@@ -246,7 +247,7 @@ for tg_idx,tg in enumerate(input_tg):
                            #idx_line_plot = idx_line_plot + 1
 
                            # TMP:
-                           if easys == 'EAS56' and atype != 'AN' and res == '10' :
+                           if easys == 'EAS56' and atype != 'AN' and res == '10' and atype == 'FC3' :
                               ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),'-',color=colors[idx_line_plot],label='ECMWF '+atype+' (min: '+str(int(min_val))+' hPa)',linewidth=3)  
                               # Update line in plot index
                               idx_line_plot = idx_line_plot + 1
@@ -289,7 +290,7 @@ for tg_idx,tg in enumerate(input_tg):
 
 
     plt.tight_layout()
-    plt.savefig(fig_name,format='png',dpi=1200)
+    plt.savefig(fig_name,format='png',dpi=1200,bbox_inches='tight')
     plt.clf()
 
   
