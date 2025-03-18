@@ -40,7 +40,7 @@ time_p = 'osr5'
 obs_interp_flag = 1
 
 # ---  Input archive ---
-input_dir          = '/data/cmcc/ag15419/tmp_med_dev_old/Venezia_Acqua_Alta_2019/VAA_sea_level_paper/'
+input_dir          = '/work/cmcc/ag15419/tmp_med_dev_old/Venezia_Acqua_Alta_2019/VAA_sea_level_paper/'
 tpxo_ts            = 'ISMAR_TG_tpxo.nc'
 #
 input_tg   = ['ISMAR_TG']
@@ -348,18 +348,21 @@ for tg_idx,tg in enumerate(input_tg):
        plt.xlim([datetime(2019,11,12,16,30,0),datetime(2019,11,12,23,30,0)])
        plt.xlabel ('Days of 12 November 2019',fontsize=18)
        ax.xaxis.set_major_locator(mdates.HourLocator())
-       #ax.xaxis.set_minor_locator(mdates.HourLocator((6,12,18)))
+       ax.xaxis.set_minor_locator(mdates.HourLocator((6,12,18)))
        ax.xaxis.set_major_formatter(mdates.DateFormatter("\n%H"))
        ax.margins(x=0)
     elif time_p == 'osr5' :
        plt.xlim([datetime(2019,11,10,0,0,0),datetime(2019,11,12,23,30,0)])
        plt.xlabel ('Days of November 2019',fontsize=16)
        ax.xaxis.set_major_locator(mdates.DayLocator())
-       ax.xaxis.set_major_formatter(mdates.DateFormatter("\n%d"))
+       ax.xaxis.set_major_formatter(mdates.DateFormatter("\n%d Nov"))
+       ax.xaxis.set_minor_locator(mdates.HourLocator((6,12,18)))
+       ax.xaxis.set_minor_formatter(mdates.DateFormatter("\n%H:%M"))
+       ax.tick_params(axis ='both', which ='minor', labelsize = 14, colors ='dimgray')
        ax.margins(x=0)
        plt.ylim(0,200)
 
-
+    ax.grid(True, which='both')
 
 
     plt.tight_layout()
