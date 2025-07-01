@@ -39,7 +39,7 @@ import matplotlib.pylab as pl
 import tidal_filter as mod
 mpl.use('Agg')
 #
-workdir='/work/cmcc/ag15419/VAA_EAS9/' 
+workdir='/work/cmcc/ag15419/VAA_EAS9_long/' 
 outfile=open(workdir+'bandwidths.txt',"w")
 coo_file='AAV_adr_2022.coo'
 model_bathy='/work/cmcc/ag15419/VAA_paper/DATA0/bathy_meter.nc'
@@ -108,7 +108,7 @@ for STG in ALL_STGS:
       tidal3=workdir+'ISMAR_TG_mod_EAS9-simu.nc'
       obs_emodnet=tidal1 #workdir+'RMN-Venice_25h_obs_nondet_00.nc'
       obs_ismar=workdir+'piattaforma2022_long_20Oct_22Nov.csv'
-      obs_ismar_ref=workdir+'piattaforma2022_long_6Nov_17Nov.csv'
+      obs_ismar_ref=workdir+'piattaforma2022_long_20Oct_22Nov.csv'
       time_csv=workdir+'piattaforma2019_false_long.csv'
    else:
       non_tidal=workdir+'RMN-Venice_mod_EAS9-NT.nc'
@@ -118,7 +118,7 @@ for STG in ALL_STGS:
       obs_emodnet=workdir+'MO_TS_TG_RMN-Venice_20Oct-22Nov.nc'
       obs_emodnet_ref=obs_emodnet
       obs_ismar=workdir+'piattaforma2022_long_20Oct_22Nov.csv'
-      obs_ismar_ref=workdir+'piattaforma2022_long_20Oct_17Nov.csv'
+      obs_ismar_ref=obs_ismar
       time_csv=workdir+'piattaforma2019_false_long.csv'
    
    ############################
@@ -221,6 +221,7 @@ for STG in ALL_STGS:
 
    # COMPUTE THE TPXO TIDAL SIGNAL
    tpxo=mod_tidal1-mod_detided1
+   print ('PROVA TPXO',len(tpxo))
    #
    # Detide OBS by means of TPXO
    ##obs_emodnet_det = obs_emodnet - tpxo
@@ -283,7 +284,7 @@ for STG in ALL_STGS:
    
    # Sea Level
 #   #obs_emodnet_sealevel = obs_emodnet - np.nanmean(obs_emodnet) + obs_ref
-   obs_ismar_sealevel = obs_ismar - np.nanmean(obs_ismar) + obs_ref
+   obs_ismar_sealevel = obs_ismar #- np.nanmean(obs_ismar) + obs_ref
    mod_tidal1_sealevel = mod_tidal1 - np.nanmean(mod_tidal1) + obs_ref
    mod_tidal2_sealevel = mod_tidal2 - np.nanmean(mod_tidal2) + obs_ref
    mod_tidal3_sealevel = mod_tidal3 - np.nanmean(mod_tidal3) + obs_ref
@@ -291,6 +292,11 @@ for STG in ALL_STGS:
 #   mod_nontidal2_sealevel = mod_nontidal2 - np.nanmean(mod_nontidal2) + obs_ref
 #   mod_nontidal3_sealevel = mod_nontidal3 - np.nanmean(mod_nontidal3) + obs_ref
    mod_nontidal_sealevel = mod_nontidal - np.nanmean(mod_nontidal) + obs_ref
+
+   if len(tpxo) > len(obs_ismar):
+      mod_nontidal_sealevel = mod_nontidal+ tpxo[-len(obs_ismar):] - np.nanmean(mod_nontidal + tpxo[-len(obs_ismar):]) + obs_ref
+   else:
+      obs_ismar_det = mod_nontidal[-len(tpxo):] + tpxo - np.nanmean(mod_nontidal[-len(tpxo):]+tpxo) + obs_ref
 
    # Tides
    tpxo_tid=tpxo-np.nanmean(tpxo) #+obs_ref_tides
@@ -360,6 +366,7 @@ for STG in ALL_STGS:
       
    else:
       alltimes=alltimes_obs
+      alltimes=[time + timedelta(hours=1) for time in alltimes_obs]
 
       #alltimes=alltimes_obs[0:-1]
       #alltimes_obs=alltimes_obs[0:-1]
@@ -394,6 +401,7 @@ for STG in ALL_STGS:
    peak_mod_tidal1 = round(np.max(mod_tidal1_sealevel[-72:]))
    peak_mod_tidal2 = round(np.max(mod_tidal2_sealevel[-72:]))
    peak_mod_tidal3 = round(np.max(mod_tidal3_sealevel[-72:]))
+   #peak_mod_nontidal = round(np.max(mod_nontidal_sealevel[-72:]+tpxo_tid[-72:]))
    peak_mod_nontidal = round(np.max(mod_nontidal_sealevel[-72:]))
    peak_obs_ismar=round(np.max(obs_ismar_sealevel[-72:]))
 
@@ -402,9 +410,22 @@ for STG in ALL_STGS:
    #plt.plot(alltimes[-72:-48],mod_tidal1_sealevel[-72:-48], '-', color=colors[1],label = 'MEDFS Analysis',linewidth=3)
    #plt.plot(alltimes[-49:],mod_tidal1_sealevel[-49:], '-', color=colors[2],label = ' (max: '+str(peak_mod_tidal1)+' cm)',linewidth=3)
    plt.plot(alltimes_obs[-len(obs_ismar_sealevel):],obs_ismar_sealevel, '-o', color='navy',label = 'OBS (max: '+str(peak_obs_ismar)+' cm)',linewidth=3)
-   #plt.plot(alltimes[-72:],mod_tidal2_sealevel[-72:], '-', color='tab:blue',label = 'EAS9 (max: '+str(peak_mod_tidal2)+' cm)',linewidth=3)
-   #plt.plot(alltimes[-72:],mod_nontidal_sealevel[-72:], '-', color='tab:orange',label = 'EAS9-NT+TPXO (max: '+str(peak_mod_nontidal)+' cm)',linewidth=3)
-   #plt.plot(alltimes[-72:],mod_tidal3_sealevel[-72:], '-', color='tab:green',label = 'EAS9-simu (max: '+str(peak_mod_tidal3)+' cm)',linewidth=3)
+   try:
+      plt.plot(alltimes[-528:],mod_tidal2_sealevel[-528:], '-', color='tab:blue',label = 'EAS9 (max: '+str(peak_mod_tidal2)+' cm)',linewidth=3)
+      #plt.plot(alltimes[-528:],mod_nontidal_sealevel[-528:]+tpxo_tid[-528:], '-', color='tab:orange',label = 'EAS9-NT+TPXO (max: '+str(peak_mod_nontidal)+' cm)',linewidth=3)
+      plt.plot(alltimes[-528:],mod_nontidal_sealevel[-528:], '-', color='tab:orange',label = 'EAS9-NT+TPXO (max: '+str(peak_mod_nontidal)+' cm)',linewidth=3)
+      plt.plot(alltimes[-528:],mod_tidal3_sealevel[-528:], '-', color='tab:green',label = 'EAS9-simu (max: '+str(peak_mod_tidal3)+' cm)',linewidth=3)
+   except:
+      try:
+         plt.plot(alltimes[-128:],mod_tidal2_sealevel[-128:], '-', color='tab:blue',label = 'EAS9 (max: '+str(peak_mod_tidal2)+' cm)',linewidth=3)
+         #plt.plot(alltimes[-128:],mod_nontidal_sealevel[-128:]+tpxo_tid[-128:], '-', color='tab:orange',label = 'EAS9-NT+TPXO (max: '+str(peak_mod_nontidal)+' cm)',linewidth=3)
+         plt.plot(alltimes[-128:],mod_nontidal_sealevel[-128:], '-', color='tab:orange',label = 'EAS9-NT+TPXO (max: '+str(peak_mod_nontidal)+' cm)',linewidth=3)
+         plt.plot(alltimes[-128:],mod_tidal3_sealevel[-128:], '-', color='tab:green',label = 'EAS9-simu (max: '+str(peak_mod_tidal3)+' cm)',linewidth=3)
+      except:
+         plt.plot(alltimes[-72:],mod_tidal2_sealevel[-72:], '-', color='tab:blue',label = 'EAS9 (max: '+str(peak_mod_tidal2)+' cm)',linewidth=3)
+         #plt.plot(alltimes[-72:],mod_nontidal_sealevel[-72:]+tpxo_tid[-72:], '-', color='tab:orange',label = 'EAS9-NT+TPXO (max: '+str(peak_mod_nontidal)+' cm)',linewidth=3)
+         plt.plot(alltimes[-72:],mod_nontidal_sealevel[-72:], '-', color='tab:orange',label = 'EAS9-NT+TPXO (max: '+str(peak_mod_nontidal)+' cm)',linewidth=3)
+         plt.plot(alltimes[-72:],mod_tidal3_sealevel[-72:], '-', color='tab:green',label = 'EAS9-simu (max: '+str(peak_mod_tidal3)+' cm)',linewidth=3)
 
    plt.legend( loc='upper right',fontsize =12)
    plt.grid ()
@@ -501,18 +522,21 @@ for STG in ALL_STGS:
    peak_mod_tidal1 = round(np.max(mod_tidal1_sealevel[-72:]))
    peak_mod_tidal2 = round(np.max(mod_tidal2_sealevel[-72:]))
    peak_mod_tidal3 = round(np.max(mod_tidal3_sealevel[-72:]))
-   peak_mod_nontidal = round(np.max(mod_nontidal_sealevel[-72:]+tpxo_tid[-72:]-np.nanmean(tpxo_tid[-72:])))
+   peak_mod_nontidal = round(np.max(mod_nontidal_sealevel[-72:]))
+   #peak_mod_nontidal = round(np.max(mod_nontidal_sealevel[-72:]+tpxo_tid[-72:]))
    
 
       # Add Extreme flood line +140 cm
    plt.axhline(140,color='red',linewidth=1,label='Extreme floods threshold (140 cm)')
+   plt.axhline(obs_ref,color='blue',linewidth=1,label='Obs mean')
    #plt.plot(alltimes[-72:-48],mod_tidal1_sealevel[-72:-48], '-', color=colors[1],label = 'MEDFS Analysis',linewidth=3)
    #plt.plot(alltimes[-49:],mod_tidal1_sealevel[-49:], '-', color=colors[2],label = ' (max: '+str(peak_mod_tidal1)+' cm)',linewidth=3)
    plt.plot(alltimes_obs[-72:],obs_ismar_sealevel[-72:], '-o', color='navy',label = 'OBS (max: '+str(peak_obs_ismar)+' cm)',linewidth=3)
    plt.plot(alltimes[-72:],mod_tidal2_sealevel[-72:], '-', color='tab:blue',label = 'EAS9 (max: '+str(peak_mod_tidal2)+' cm)',linewidth=3)
-   plt.plot(alltimes[-72:],mod_nontidal_sealevel[-72:]-np.nanmean(mod_nontidal_sealevel[-72:])+tpxo_tid[-72:]-np.nanmean(tpxo_tid[-72:])+obs_ref, '-', color='tab:orange',label = 'EAS9-NT+TPXO (max: '+str(peak_mod_nontidal)+' cm)',linewidth=3)
+   #plt.plot(alltimes[-72:],mod_nontidal_sealevel[-72:]+tpxo_tid[-72:], '-', color='tab:orange',label = 'EAS9-NT+TPXO (max: '+str(peak_mod_nontidal)+' cm)',linewidth=3)
+   plt.plot(alltimes[-72:],mod_nontidal_sealevel[-72:], '-', color='tab:orange',label = 'EAS9-NT+TPXO (max: '+str(peak_mod_nontidal)+' cm)',linewidth=3)
    plt.plot(alltimes[-72:],mod_tidal3_sealevel[-72:], '-', color='tab:green',label = 'EAS9-simu (max: '+str(peak_mod_tidal3)+' cm)',linewidth=3)
-   plt.plot(alltimes[-72:],tpxo_tid[-72:]-np.nanmean(tpxo_tid[-72:])+obs_ref, '--', color=colors[5],label = 'Tides TPXO',linewidth=2)
+   plt.plot(alltimes[-72:],tpxo_tid[-72:]+obs_ref, '--', color=colors[5],label = 'Tides TPXO',linewidth=2)
    #plt.axhline(obs_ref,color='black',label = '3 Mon Mean = '+str(round(obs_ref,1))+' cm',linewidth=3)
 
    plt.axvspan(alltimes[-17],alltimes[-15], color='grey', alpha=0.2)

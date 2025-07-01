@@ -31,7 +31,7 @@ mod_mean6  = -0.0995  # Mean over Nov 2019 run EAS6_AN_w10 in ISMAR_TG
 mod_mean5  = -0.0992  # Mean over Nov 2019 run EAS5_AN_w10 in ISMAR_TG
 tpxo_mean  = -0.0004  # Mean over Nov 2019 tpxo in ISMAR_TG
 #obs_mean   =  0.7524  # Mean over Nov 2019 obs in ISMAR_TG
-obs_mean   =  0.76  # Mean over 10-15 Nov 2019 obs in ISMAR_TG
+obs_mean   =  0.0  # Mean over the days of the AA event of  Nov 2019 obs in ISMAR_TG
 
 # length of the time interval to be plotted: allp, zoom or super-zoom
 time_p = 'osr5'
@@ -42,6 +42,7 @@ obs_interp_flag = 1
 # ---  Input archive ---
 input_dir          = '/work/cmcc/ag15419/tmp_med_dev_old/Venezia_Acqua_Alta_2019/VAA_sea_level_paper/'
 tpxo_ts            = 'ISMAR_TG_tpxo.nc'
+eas9_bt            = 'ISMAR_TG_mod_EAS9_FC_w10.nc'
 #
 input_tg   = ['ISMAR_TG']
 input_dat  = ['obs','mod'] # Do not change the order because the obs are used as reference for offset and differences!
@@ -63,7 +64,8 @@ colors = ['darkblue','tab:blue','tab:cyan']
 for tg_idx,tg in enumerate(input_tg):
 
     # Output file
-    fig_name = workdir+'/'+tg+'_FCall_'+time_p+'.png' #'_FC3.png'
+    fig_name = workdir+'/'+tg+'_FCall_'+time_p+'_BT.png' #'_FC3.png'
+    fig_name_diff = workdir+'/'+tg+'_FCall_'+time_p+'_BTdiff.png' #
 
     # Loop on datasets
     for dat_idx,dat in enumerate(input_dat):
@@ -225,8 +227,16 @@ for tg_idx,tg in enumerate(input_tg):
                            print ('Time mod',globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])
                            # Compute the differences wrt obs
                            #globals()['diff_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]=np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])-var_obs
+
+                           # EAS9 Barotropic model
+                           fh = ncdf.Dataset(input_dir+eas9_bt,mode='r')
+                           var_mod_bt = fh.variables['sossheig'][:]
+                           fh.close()
+                           var_mod_bt = var_mod_bt-np.mean(var_mod_bt)+obs_mean
+
                         else:
                            print ('NOT Found!',file_to_open)
+
 
 ######## PLOT TS #########
 # Loop on tide-gauges
@@ -277,6 +287,8 @@ for tg_idx,tg in enumerate(input_tg):
                            elif easys == 'EAS6' and atype != 'AN' and res != '08': # and atype == 'FCall_20191110':
                                  # OK
                                  ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])*100,'-',color='tab:green',label=lab2print+' (12 November peak = '+str(max2print)+' cm)',linewidth=3,zorder=3)
+                                 BC=np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])*100
+                                 TIME_BC=np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])
                            elif res != '08': #and atype == 'FCall_20191110':
                               try:
                                  ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),np.squeeze(globals()['var_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])*100,'-',color=colors[idx_line_plot],label=lab2print+' (12 November peak = '+str(max2print)+' cm)',linewidth=3)
@@ -286,6 +298,13 @@ for tg_idx,tg in enumerate(input_tg):
                            # Update line in plot index
                            idx_line_plot = idx_line_plot + 1
 
+
+    # EAS9 BT
+    max2print=int(np.max(var_mod_bt)*100)
+    ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),np.squeeze(var_mod_bt)*100,'-',color='lime',label='BT MedFS forecast (12 November peak = '+str(max2print)+' cm)',linewidth=3,zorder=3)
+    BT=np.squeeze(var_mod_bt)*100
+    TIME_BT=np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])
+
     # High freq OBS
     obs_max=int(np.max(var_obs[68:72])*100)
     obs_H_mean=round(np.nanmean(var_obs[0:144])*100,2)
@@ -294,14 +313,16 @@ for tg_idx,tg in enumerate(input_tg):
     print ('obs_Hfreq_max',obs_Hfreq_max)
     print ('obs_H_mean,obs_Hfreq_mean',obs_H_mean,obs_Hfreq_mean)
     # HF OBS
-    ax.plot(np.squeeze(globals()['alltimes_mod_Hfreq_'+tg+'_'+dat+'_'+easys+'_'+'FCall_20191110'+'_w'+res])[:-6],var_obs_Hfreq[6:(24*3*6)]*100,'--',color='navy',label='10 min freq. OBS (12 November peak = '+str(obs_Hfreq_max)+' cm)',linewidth=3,zorder=1)
+    ax.plot(np.squeeze(globals()['alltimes_mod_Hfreq_'+tg+'_'+dat+'_'+easys+'_'+'FCall_20191110'+'_w'+res])[:-6],(var_obs_Hfreq[6:(24*3*6)]-np.nanmean(var_obs_Hfreq[6:(24*3*6)])+obs_mean)*100,'--',color='navy',label='10 min freq. OBS (12 November peak = '+str(obs_Hfreq_max)+' cm)',linewidth=3,zorder=1)
 
     # OBS
     #ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])[23+1:],var_obs[23:-1]*100,'o-',color='red',label='Hourly OBS (max='+str(obs_max)+' cm)',linewidth=3,zorder=1)
-    ax.plot(np.squeeze(globals()['alltimes_obs_'+tg+'_'+dat+'_'+easys+'_'+'FCall_20191110'+'_w'+res])[:],var_obs[:(24*3)]*100,'o-',color='navy',label='Hourly OBS (12 November peak = '+str(obs_max)+' cm)',linewidth=3,zorder=2)
+    ax.plot(np.squeeze(globals()['alltimes_obs_'+tg+'_'+dat+'_'+easys+'_'+'FCall_20191110'+'_w'+res])[:],(var_obs[:(24*3)]-np.nanmean(var_obs[:(24*3)])+obs_mean)*100,'o-',color='navy',label='Hourly OBS (12 November peak = '+str(obs_max)+' cm)',linewidth=3,zorder=2)
+    OBS=var_obs[:(24*3)]*100
+    TIME_OBS=np.squeeze(globals()['alltimes_obs_'+tg+'_'+dat+'_'+easys+'_'+'FCall_20191110'+'_w'+res])[:]
+
     # Add mean obs offset
     plt.axhline(obs_mean*100,color='black',linewidth=2,label='Mean OBS ('+str(round(obs_mean*100))+' cm)',zorder=0)
-
 
     # TPXO
     #ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])[0:72],(np.squeeze(tpxo_sig)[0:72]-tpxo_mean+obs_mean)*100,'--',color='black',label='Tides TPXO9',linewidth=2)
@@ -369,5 +390,47 @@ for tg_idx,tg in enumerate(input_tg):
     plt.savefig(fig_name,format='png', dpi=300, bbox_inches='tight') #,dpi=1200)
     plt.clf()
 
-  
+    #################################
+    # interpolation at the same time 
+    # Converti tutto in datetime64[ns]
+    time_obs = np.array(pd.to_datetime(TIME_OBS))
+    time_bt = np.array(pd.to_datetime(TIME_BT))
 
+    # Converti in secondi per usare np.interp (serve asse x numerico)
+    time_obs_sec = (time_obs - time_obs[0]) / np.timedelta64(1, 's')
+    time_bt_sec = (time_bt - time_obs[0]) / np.timedelta64(1, 's')
+
+    # Interpolazione vera e propria
+    OBS_interp = np.interp(time_bt_sec, time_obs_sec, OBS)
+
+    print("Lunghezze:", len(OBS), len(TIME_OBS))
+    print("Intervallo OBS:", TIME_OBS[0], "->", TIME_OBS[-1])
+    print("Intervallo BT :", TIME_BT[0],  "->", TIME_BT[-1])
+
+    # Plot of the diffs
+    fig = plt.figure(figsize=(10,5))
+    plt.rc('font', size=16)
+    ax = fig.add_subplot(111)
+    print ('BT - OBS_interp',BT - OBS_interp)
+    print ('BC - OBS_interp',BC - OBS_interp)
+    ax.plot(TIME_BT,BC-BT,'-',color='blue',label='Diff: MedFS forecast - BT MedFS forecast',linewidth=2)
+    ax.plot(TIME_BT, BT - OBS_interp, '--', color='lime', label='BT MedFS forecast - Hourly OBS', linewidth=2)
+    ax.plot(TIME_BT, BC - OBS_interp, '--', color='tab:green', label='MedFS forecast - Hourly OBS', linewidth=2)
+
+    plt.xlim([datetime(2019,11,10,0,0,0),datetime(2019,11,12,23,30,0)])
+    plt.xlabel ('Days of November 2019',fontsize=16)
+    ax.xaxis.set_major_locator(mdates.DayLocator())
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("\n%d Nov"))
+    ax.xaxis.set_minor_locator(mdates.HourLocator((6,12,18)))
+    ax.xaxis.set_minor_formatter(mdates.DateFormatter("\n%H:%M"))
+    ax.tick_params(axis ='both', which ='minor', labelsize = 14, colors ='dimgray')
+    ax.margins(x=0)
+
+    plt.ylim(-40,40)
+    plt.ylabel('Differences [cm]')
+    ax.leg = plt.legend(loc='lower left', ncol=1,  shadow=True, fancybox=True)
+    ax.grid(True, which='both')
+    plt.axhline(0,color='black',linewidth=2,label='')
+    plt.tight_layout()
+    plt.savefig(fig_name_diff,format='png', dpi=300, bbox_inches='tight')
+    plt.clf()

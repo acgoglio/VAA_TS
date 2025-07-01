@@ -4,7 +4,7 @@
 # lat ; lon ; name ; obs path tpl ; obs name tpl ; flag tpxo comp ; flag lit comp
 #
 #45.323056;12.514722;ISMAR_TG;/data/oda/ag15419/TG_DATA/DownloadEMODNET_old/RMN-Venice/;*_%YYYYMM%.nc;0;0
-#45.41822;12.426528;RMN-Venice;/data/oda/ag15419/TG_DATA/DownloadEMODNET_old/RMN-Venice/;*_%YYYYMM%.nc;1;1
+45.41822;12.426528;RMN-Venice;/data/oda/ag15419/TG_DATA/DownloadEMODNET_old/RMN-Venice/;*_%YYYYMM%.nc;1;1
 #44.4921;12.2829;RMN-Ravenna;/data/oda/ag15419/TG_DATA/DownloadEMODNET_old/RMN-RAVENNA;*_%YYYYMM%*.nc;1;0
 #43.624767;13.506516;RMN-Ancona;/data/oda/ag15419/TG_DATA/DownloadEMODNET_old/RMN-ANCONA/;*_%YYYYMM%.nc;1;1
 #45.6544;13.7561;RMN-Trieste;/data/oda/ag15419/TG_DATA/DownloadEMODNET_old/RMN-TRIESTE/;*_%YYYYMM%.nc;1;1
