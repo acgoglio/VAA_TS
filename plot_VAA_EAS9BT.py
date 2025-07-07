@@ -27,11 +27,12 @@ workdir = '/work/cmcc/ag15419/tmp/Venezia_Acqua_Alta/SSH_ISMAR_TG/'
 start_date = 20191109 #12 #09
 end_date   = 20191115 #13 #17
 
-mod_mean6  = -0.0995  # Mean over Nov 2019 run EAS6_AN_w10 in ISMAR_TG
-mod_mean5  = -0.0992  # Mean over Nov 2019 run EAS5_AN_w10 in ISMAR_TG
-tpxo_mean  = -0.0004  # Mean over Nov 2019 tpxo in ISMAR_TG
-#obs_mean   =  0.7524  # Mean over Nov 2019 obs in ISMAR_TG
-obs_mean   =  0.0  # Mean over the days of the AA event of  Nov 2019 obs in ISMAR_TG
+mod_mean6  = -0.0995  # Mean at ISMAR TG 
+mod_mean5  = -0.0992  # Mean at ISMAR_TG
+mod_meanbt =  0.2318  # Mean at ISMAR_TG
+tpxo_mean  = -0.0004  # Mean of tpxo at ISMAR_TG
+# To plot the anomaly set obs_mean   =  0.0
+obs_mean   =  0.76  # OBS Mean at ISMAR_TG = 0.76 (10-15 Nov) or  = 0.71 (10-12 Nov)
 
 # length of the time interval to be plotted: allp, zoom or super-zoom
 time_p = 'osr5'
@@ -42,7 +43,7 @@ obs_interp_flag = 1
 # ---  Input archive ---
 input_dir          = '/work/cmcc/ag15419/tmp_med_dev_old/Venezia_Acqua_Alta_2019/VAA_sea_level_paper/'
 tpxo_ts            = 'ISMAR_TG_tpxo.nc'
-eas9_bt            = 'ISMAR_TG_mod_EAS9_FC_w10.nc'
+eas9_bt            = 'ISMAR_TG_mod_EAS9BT_FC_w10.nc'
 #
 input_tg   = ['ISMAR_TG']
 input_dat  = ['obs','mod'] # Do not change the order because the obs are used as reference for offset and differences!
@@ -117,8 +118,9 @@ for tg_idx,tg in enumerate(input_tg):
               #   mean_obs = np.nanmean(var_obs)
               #   obs_mean = mean_obs
 
-              offset6 = obs_mean-mod_mean6
-              offset5 = obs_mean-mod_mean5
+              offset6  = obs_mean-mod_mean6
+              offset5  = obs_mean-mod_mean5
+              offsetbt = obs_mean-mod_meanbt
 
               # Close infile 
               #fh.close()
@@ -232,7 +234,7 @@ for tg_idx,tg in enumerate(input_tg):
                            fh = ncdf.Dataset(input_dir+eas9_bt,mode='r')
                            var_mod_bt = fh.variables['sossheig'][:]
                            fh.close()
-                           var_mod_bt = var_mod_bt-np.mean(var_mod_bt)+obs_mean
+                           var_mod_bt = var_mod_bt+offsetbt #-np.mean(var_mod_bt)+obs_mean
 
                         else:
                            print ('NOT Found!',file_to_open)
@@ -306,30 +308,42 @@ for tg_idx,tg in enumerate(input_tg):
     TIME_BT=np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])
 
     # High freq OBS
-    obs_max=int(np.max(var_obs[68:72])*100)
+    if obs_mean == 0.0:
+       obs_max=int((np.max(var_obs[68:72])-0.76)*100)
+       obs_Hfreq_max=int((np.max(var_obs_Hfreq[68*6:72*6])-0.76)*100)
+       print ('PROVE o hfo',obs_max,obs_Hfreq_max)
+    else:
+       obs_max=int(np.max(var_obs[68:72])*100)
+       obs_Hfreq_max=int(np.max(var_obs_Hfreq[68*6:72*6])*100)
+
     obs_H_mean=round(np.nanmean(var_obs[0:144])*100,2)
-    obs_Hfreq_max=int(np.max(var_obs_Hfreq[68*6:72*6])*100)
     obs_Hfreq_mean=round(np.nanmean(var_obs_Hfreq[0:144*6])*100,2)
     print ('obs_Hfreq_max',obs_Hfreq_max)
     print ('obs_H_mean,obs_Hfreq_mean',obs_H_mean,obs_Hfreq_mean)
     # HF OBS
-    ax.plot(np.squeeze(globals()['alltimes_mod_Hfreq_'+tg+'_'+dat+'_'+easys+'_'+'FCall_20191110'+'_w'+res])[:-6],(var_obs_Hfreq[6:(24*3*6)]-np.nanmean(var_obs_Hfreq[6:(24*3*6)])+obs_mean)*100,'--',color='navy',label='10 min freq. OBS (12 November peak = '+str(obs_Hfreq_max)+' cm)',linewidth=3,zorder=1)
+    if obs_mean == 0.0:
+       var_obs_Hfreq[6:(24*3*6)]=var_obs_Hfreq[6:(24*3*6)]-0.76
+    ax.plot(np.squeeze(globals()['alltimes_mod_Hfreq_'+tg+'_'+dat+'_'+easys+'_'+'FCall_20191110'+'_w'+res])[:-6],(var_obs_Hfreq[6:(24*3*6)])*100,'--',color='navy',label='10 min freq. OBS (12 November peak = '+str(obs_Hfreq_max)+' cm)',linewidth=3,zorder=1)
 
     # OBS
+    if obs_mean == 0.0:
+       var_obs[:(24*3)]=var_obs[:(24*3)]-0.76
     #ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])[23+1:],var_obs[23:-1]*100,'o-',color='red',label='Hourly OBS (max='+str(obs_max)+' cm)',linewidth=3,zorder=1)
-    ax.plot(np.squeeze(globals()['alltimes_obs_'+tg+'_'+dat+'_'+easys+'_'+'FCall_20191110'+'_w'+res])[:],(var_obs[:(24*3)]-np.nanmean(var_obs[:(24*3)])+obs_mean)*100,'o-',color='navy',label='Hourly OBS (12 November peak = '+str(obs_max)+' cm)',linewidth=3,zorder=2)
+    ax.plot(np.squeeze(globals()['alltimes_obs_'+tg+'_'+dat+'_'+easys+'_'+'FCall_20191110'+'_w'+res])[:],(var_obs[:(24*3)])*100,'o-',color='navy',label='Hourly OBS (12 November peak = '+str(obs_max)+' cm)',linewidth=3,zorder=2)
     OBS=var_obs[:(24*3)]*100
     TIME_OBS=np.squeeze(globals()['alltimes_obs_'+tg+'_'+dat+'_'+easys+'_'+'FCall_20191110'+'_w'+res])[:]
 
     # Add mean obs offset
-    plt.axhline(obs_mean*100,color='black',linewidth=2,label='Mean OBS ('+str(round(obs_mean*100))+' cm)',zorder=0)
+    if obs_mean != 0.0:
+       plt.axhline(obs_mean*100,color='black',linewidth=2,label='Mean OBS ('+str(round(obs_mean*100))+' cm)',zorder=0)
 
     # TPXO
     #ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res])[0:72],(np.squeeze(tpxo_sig)[0:72]-tpxo_mean+obs_mean)*100,'--',color='black',label='Tides TPXO9',linewidth=2)
     ax.plot(np.squeeze(globals()['alltimes_mod_'+tg+'_'+dat+'_'+easys+'_'+atype+'_w'+res]),(np.squeeze(tpxo_sig)[0:72]-tpxo_mean+obs_mean)*100,'--',color='black',label='Tides TPXO9',linewidth=2)
 
     # Add Extreme flood line +140 cm 
-    plt.axhline(140,color='tab:red',linewidth=2,label='Extreme floods threshold (140 cm)')
+    if obs_mean != 0.0:
+       plt.axhline(140,color='tab:red',linewidth=2,label='Extreme floods threshold (140 cm)')
 
     # Finalize the plot
     ylabel("Sea Level [cm]",fontsize=18)
@@ -348,8 +362,12 @@ for tg_idx,tg in enumerate(input_tg):
     ##leg.get_frame().set_alpha(0.3)
     ax.grid('on')
     #plt.axhline(linewidth=2, color='black')
-    plt.title('Sea Level observations and MedFS forecast at '+tg,fontsize=18) #and diff wrt obs in '+tg,fontsize=18)
-    plt.ylim(0,200)
+    if obs_mean != 0.0:
+       plt.title('Sea Level observations and MedFS forecast at '+tg,fontsize=18) #and diff wrt obs in '+tg,fontsize=18)
+       plt.ylim(0,200)
+    else:
+       plt.title('Sea Level Anomaly (observations and MedFS forecast) at '+tg,fontsize=18) #and diff wrt obs in '+tg,fontsize=18)
+       plt.ylim(-125,125)
     if time_p == 'allp' :
        plt.xlim([datetime(2019,11,9,0,0,0),datetime(2019,11,12,23,30,0)])
        plt.xlabel ('Days of November 2019',fontsize=18)
@@ -381,7 +399,6 @@ for tg_idx,tg in enumerate(input_tg):
        ax.xaxis.set_minor_formatter(mdates.DateFormatter("\n%H:%M"))
        ax.tick_params(axis ='both', which ='minor', labelsize = 14, colors ='dimgray')
        ax.margins(x=0)
-       plt.ylim(0,200)
 
     ax.grid(True, which='both')
 

@@ -1,6 +1,6 @@
 ###
 # Extraction of time-series:
-# 1 -> build your p_extr.ini (ini file for extraction) and link it in p_extr.ini; you can choose to extract AN or 1st, 2nd, 3rd days of fcst (FC1,FC2,FC3) or to estract fc as a 3day time serie (FCall) otherwise you can extract MSL from atm forcings; the *long.ini correspond to the extractions for the computation of the offset (mean over 1 month of analisys)   
+# 1 -> build your p_extr.ini (ini file for extraction) and link it in p_extr.ini; you can choose to extract AN or 1st, 2nd, 3rd days of fcst (FC1,FC2,FC3) or to estract fc as a 3day time serie (FCall) otherwise you can extract MSL from atm forcings; the *long.ini correspond to the extractions for the computation of the offset (mean over 1 month of analisys); for BT runs you can use the same ini file as for the AN   
 # 2 -> Chose the pextr job and link it in pextrjob_oldTG.temp (WARNING: for FCall use the same of the AN while for the forecast use FC1, FC2 and FC3 respectively for the 1st,2nd and 3rd days of fcst concatenation)
 # 3 -> run runextr.sh
 # 

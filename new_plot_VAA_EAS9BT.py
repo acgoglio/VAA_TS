@@ -1,0 +1,468 @@
+import os
+import numpy as np
+import pandas as pd
+import xarray as xr
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from datetime import datetime
+from matplotlib.colors import LinearSegmentedColormap
+mpl.use('Agg')
+
+# === Input directory ===
+input_dir = '/work/cmcc/ag15419/tmp_med_dev_old/Venezia_Acqua_Alta_2019/VAA_sea_level_paper/'
+
+# === Time window ===
+start_time = datetime(2019, 11, 10)
+end_time   = datetime(2019, 11, 13)
+
+# === Type of offset ===
+# Choose between: 0 -> first value ; 1 -> obs mean on the specific period; 2 -> paper: mod - nov mod mean + 10-15 obs mean ; 3 -> obs mean 1 Nov - 10 Nov; 4 -> obs mean 10 Oct - 10 Nov
+offset_type = 4
+
+
+# === Read NetCDF files ===
+def read_nc_series(filename, varname, timevar='time_counter'):
+    ds = xr.open_dataset(os.path.join(input_dir, filename))
+    time = ds[timevar].values
+    time = pd.to_datetime(time)
+    data = ds[varname].squeeze().values * 100  # convert to cm
+    return time, data
+
+# === Read CSV OBS files ===
+def read_csv_series_hourly(filename):
+    df = pd.read_csv(os.path.join(input_dir, filename), header=None, sep=';', comment='#')
+    time = pd.to_datetime(df[0]) - pd.Timedelta(hours=1)  # shift 1h
+    data = df[1].values * 100
+    return time, data
+
+def read_csv_series_10min(filename):
+    df = pd.read_csv(
+        os.path.join(input_dir, filename),
+        header=None,
+        sep=';',
+        comment='#',
+        na_values=['nan']  # find nans
+    )
+    time = pd.to_datetime(df[0], dayfirst=True, errors='coerce')  # `errors='coerce'` trasforma date non valide in NaT
+    time = time - pd.Timedelta(hours=1)  # shift 1h
+    data = df[1].astype(float) * 100  # mantieni i NaN e converti a cm
+    return time, data
+
+# === Read data ===
+time_bt, bt = read_nc_series('ISMAR_TG_mod_EAS9BT_FC_w10.nc', 'sossheig')
+time_bc, bc = read_nc_series('ISMAR_TG_mod_EAS6_FCall_20191110_w10.nc', 'sossheig')
+time_bc9, bc9 = read_nc_series('ISMAR_TG_mod_EAS9BC_FC_w10.nc', 'sossheig')
+time_tpxo, tpxo = read_nc_series('ISMAR_TG_tpxo.nc', 'tide_z', timevar='time') 
+
+time_obs_hourly, obs_hourly = read_csv_series_hourly('ISMAR_TG_obs_long2m.csv') #('ISMAR_TG_obs_long.csv') #('ISMAR_TG_obs_10-12.csv') 
+time_obs_hf, obs_hf = read_csv_series_10min('ISMAR_TG_obs_10min.csv_ok.csv')
+
+# Build hourly time series from 10 min freq time series
+obs_hf_series = pd.Series(obs_hf, index=pd.to_datetime(time_obs_hf))
+#obs_hourly_centered = obs_hf_series.resample('60min', offset='30min').mean()
+#time_obs_hourly_centered = obs_hourly_centered.index.to_pydatetime()
+#obs_hourly_centered_values = obs_hourly_centered.values
+#time_obs_hourly, obs_hourly =time_obs_hourly_centered,obs_hourly_centered_values
+
+# === Time filter ===
+def filter_time(t, x, ini_t, end_t):
+    mask = (t >= ini_t) & (t <= end_t)
+    return t[mask], x[mask]
+
+
+# === Plot 0a: only obs and obs avg ===
+
+# Obs avgs (m->cm)
+obs_clim_1983_2020 = 0.37
+time_nov_2019, obs_Nov_2019                 = filter_time(time_obs_hourly, obs_hourly, datetime(2019,11,1), datetime(2019,12,1))
+time_oct10_nov10_2019, obs_10Oct_10Nov_2019 = filter_time(time_obs_hourly, obs_hourly, datetime(2019,10,10), datetime(2019,11,11))
+time_nov_1_10, obs_Nov_1_10                 = filter_time(time_obs_hourly, obs_hourly, datetime(2019,11,1), datetime(2019,11,10))
+time_nov_10_12, obs_Nov_10_12               = filter_time(time_obs_hourly, obs_hourly, datetime(2019,11,10), datetime(2019,11,13))
+time_nov_10_125, obs_Nov_10_125             = filter_time(time_obs_hourly, obs_hourly, datetime(2019,11,10,12,0), datetime(2019,11,13,12,0))
+time_nov_10_13, obs_Nov_10_13               = filter_time(time_obs_hourly, obs_hourly, datetime(2019,11,10), datetime(2019,11,14))
+time_nov_10_15, obs_Nov_10_15               = filter_time(time_obs_hourly, obs_hourly, datetime(2019,11,10), datetime(2019,11,16))
+time_nov_10_17, obs_Nov_10_17               = filter_time(time_obs_hourly, obs_hourly, datetime(2019,11,10), datetime(2019,11,18))
+
+obs_clim_1983_2020   = obs_clim_1983_2020*100
+obs_Nov_2019         = np.nanmean(obs_Nov_2019)
+obs_10Oct_10Nov_2019 = np.nanmean(obs_10Oct_10Nov_2019)
+obs_Nov_1_10         = np.nanmean(obs_Nov_1_10)
+obs_Nov_10_12        = np.nanmean(obs_Nov_10_12)
+obs_Nov_10_125       = np.nanmean(obs_Nov_10_125)
+obs_Nov_10_13        = np.nanmean(obs_Nov_10_13)
+obs_Nov_10_15        = np.nanmean(obs_Nov_10_15)
+obs_Nov_10_17        = np.nanmean(obs_Nov_10_17)
+
+peak_obs_hourly = np.nanmax(obs_hourly)
+peak_obs_hf = np.nanmax(obs_hf)
+
+fig, ax = plt.subplots(figsize=(12, 8))
+plt.rc('font', size=20)
+
+# Time series
+ax.plot(time_obs_hf, obs_hf, 'b--', linewidth=2, label=f'10 min freq. OBS (12 November peak = {int(peak_obs_hf)} cm)')
+ax.plot(time_obs_hourly, obs_hourly, 'o-', color='navy', label=f'Hourly OBS (12 November peak = {int(peak_obs_hourly)} cm)', markersize=4)
+#ax.plot(time_tpxo, tpxo, 'k--', label='Tides TPXO9')
+
+# Colormap Blues
+y_labels = ['Obs clim 1983-2020:', 'Obs 10 Oct-10 Nov 2019 avg:', 'Obs Nov 2019 avg:', 'Obs Nov 1-10 avg:', 'Obs Nov 10-12 avg:', 'Obs Nov 10 12:00 - 13 12:00 avg:', 'Obs Nov 10-13 avg:', 'Obs Nov 10-15 avg:', 'Obs Nov 10-17 avg:']
+y_values = [obs_clim_1983_2020, obs_10Oct_10Nov_2019, obs_Nov_2019, obs_Nov_1_10, obs_Nov_10_12, obs_Nov_10_125, obs_Nov_10_13, obs_Nov_10_15, obs_Nov_10_17]
+cmap = plt.cm.get_cmap('cool', len(y_values))
+
+# Plot the avg values
+ax.set_xlim(datetime(2019,11,10), datetime(2019,11,13))
+for i, y in enumerate(y_values):
+    y_val = float(np.squeeze(y))
+    ax.axhline(y_val, color=cmap(i), linewidth=2.5, label=y_labels[i]+' '+str(round(y_values[i],1))+' cm')
+    #ax.text(ax.get_xlim()[0], y + 0.01, f'Linea {i+1}', color=cmap(i), fontsize=9)
+
+for i, y in enumerate(y_values):
+    ax.axhline(y, color=cmap(i), linewidth=2.5)
+
+# Highlight the 12 novembre 2019 AA event
+gray_start = datetime(2019, 11, 12, 18)
+gray_end = datetime(2019, 11, 12, 22)
+ax.axvspan(gray_start, gray_end, color='grey', alpha=0.3)
+
+# Layout e legenda
+ax.set_ylim(0, 200)
+ax.set_ylabel('Sea Level - Sea Level Avg [cm]', fontsize=20)
+ax.set_xlabel('Days of November 2019', fontsize=20)
+ax.set_title('Sea Level observations at ISMAR_TG', fontsize=20)
+
+ax.grid(True)
+ax.legend(loc='upper left', fontsize=18)
+
+ax.xaxis.set_major_locator(mdates.DayLocator())
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%d %b'))
+ax.xaxis.set_minor_locator(mdates.HourLocator(interval=6))
+ax.xaxis.set_minor_formatter(mdates.DateFormatter('%H:%M'))
+plt.setp(ax.get_xticklabels(which='major'), fontsize=16, weight='bold')
+plt.setp(ax.get_xticklabels(which='minor'), fontsize=16, color='gray')
+plt.setp(ax.get_yticklabels(), fontsize=16)
+ax.grid(which='major', axis='both', linestyle='-', linewidth=0.8, color='black')     # ogni giorno
+ax.grid(which='minor', axis='x', linestyle='--', linewidth=0.5, color='gray')     # ogni 6 ore
+ax.tick_params(axis='x', which='minor', length=4)
+ax.grid(True, which='both')
+
+# Save the plot
+plt.tight_layout()
+plt.savefig('sea_level_ISMAR_TG_obs.png', dpi=300)
+
+# === Plot 0b: only obs and obs avg on a longer period  ===
+
+fig, ax = plt.subplots(figsize=(16, 8))
+plt.rc('font', size=16)
+
+# Colormap Blues
+y_values = [obs_clim_1983_2020, obs_10Oct_10Nov_2019, obs_Nov_2019, obs_Nov_1_10, obs_Nov_10_12, obs_Nov_10_125, obs_Nov_10_13, obs_Nov_10_15, obs_Nov_10_17]
+cmap = plt.cm.get_cmap('cool', len(y_values))
+
+# Plot the avg values
+ax.set_xlim(datetime(2019,10,10), datetime(2019,11,30))
+for i, y in enumerate(y_values):
+    y_val = float(np.squeeze(y))
+    ax.axhline(y_val, color=cmap(i), linewidth=2.5, label=y_labels[i]+' '+str(round(y_values[i],1))+' cm')
+
+# Time series
+ax.plot(time_obs_hf, obs_hf, 'b--', linewidth=2, label=f'10 min freq. OBS (12 November peak = {int(peak_obs_hf)} cm)')
+ax.plot(time_obs_hourly, obs_hourly, 'o-', color='navy', label=f'Hourly OBS (12 November peak = {int(peak_obs_hourly)} cm)', markersize=4)
+#ax.plot(time_tpxo, tpxo, 'k--', label='Tides TPXO9')
+
+# Highlight the 12 novembre 2019 AA event
+gray_start = datetime(2019, 11, 12, 18)
+gray_end = datetime(2019, 11, 12, 22)
+ax.axvspan(gray_start, gray_end, color='grey', alpha=0.3)
+
+# Layout e legenda
+ax.set_ylim(-25, 200)
+ax.set_ylabel('Sea Level - Sea Level Avg [cm]', fontsize=20)
+ax.set_xlabel('Days of October-November 2019', fontsize=20)
+ax.set_title('Sea Level observations at ISMAR_TG', fontsize=20)
+
+ax.grid(True)
+ax.legend(loc='upper left', fontsize=14)
+
+ax.xaxis.set_major_locator(mdates.DayLocator())
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%d %b'))
+#ax.xaxis.set_minor_locator(mdates.HourLocator(interval=6))
+#ax.xaxis.set_minor_formatter(mdates.DateFormatter('%H:%M'))
+plt.setp(ax.get_xticklabels(which='major'), fontsize=10, weight='bold', rotation=45)
+#plt.setp(ax.get_xticklabels(which='minor'), fontsize=16, color='gray')
+plt.setp(ax.get_yticklabels(), fontsize=16)
+ax.grid(which='major', axis='both', linestyle='-', linewidth=0.8, color='black')     # ogni giorno
+#ax.grid(which='minor', axis='x', linestyle='--', linewidth=0.5, color='gray')     # ogni 6 ore
+ax.tick_params(axis='x', which='minor', length=4)
+ax.grid(True) #, which='both')
+
+# Save the plot
+plt.tight_layout()
+plt.savefig('sea_level_ISMAR_TG_obs_long.png', dpi=300)
+
+#######################################
+
+# Cut the period: start_time-end_time
+time_bt, bt = filter_time(time_bt, bt, start_time, end_time)
+time_bc, bc = filter_time(time_bc, bc, start_time, end_time)
+time_bc9, bc9 = filter_time(time_bc9, bc9, start_time, end_time)
+time_tpxo, tpxo = filter_time(time_tpxo, tpxo, start_time, end_time)
+time_obs_hourly, obs_hourly = filter_time(time_obs_hourly, obs_hourly, start_time, end_time)
+time_obs_hf, obs_hf = filter_time(time_obs_hf, obs_hf, start_time, end_time)
+
+
+# === Plot 1: Original Sea Level time serie  ===
+
+# === Peaks analysis ===
+peak_bt = np.nanmax(bt)
+peak_bc = np.nanmax(bc)
+peak_bc9 = np.nanmax(bc9)
+peak_obs_hourly = np.nanmax(obs_hourly)
+peak_obs_hf = np.nanmax(obs_hf)
+
+fig, ax = plt.subplots(figsize=(12, 8))
+plt.rc('font', size=20)
+
+# Time series
+ax.plot(time_bc9, bc9, color='tab:orange', label=f'EAS9 MedFS forecast (12 November peak = {int(peak_bc9)} cm)')
+ax.plot(time_bc, bc, color='tab:green', label=f'EAS6 MedFS forecast (12 November peak = {int(peak_bc)} cm)')
+ax.plot(time_bt, bt, color='lime', label=f'BT MedFS forecast (12 November peak = {int(peak_bt)} cm)')
+ax.plot(time_obs_hf, obs_hf, 'b--', linewidth=2, label=f'10 min freq. OBS (12 November peak = {int(peak_obs_hf)} cm)')
+ax.plot(time_obs_hourly, obs_hourly, 'o-', color='navy', label=f'Hourly OBS (12 November peak = {int(peak_obs_hourly)} cm)', markersize=4)
+#ax.plot(time_tpxo, tpxo, 'k--', label='Tides TPXO9')
+
+# Extreme threshold
+ax.axhline(140, color='red', linewidth=1.5, label='Extreme floods threshold (140 cm)')
+
+# Highlight the 12 novembre 2019 AA event
+gray_start = datetime(2019, 11, 12, 18)
+gray_end = datetime(2019, 11, 12, 22)
+ax.axvspan(gray_start, gray_end, color='grey', alpha=0.3)
+
+# Layout e legenda
+ax.set_xlim(start_time, end_time)
+ax.set_ylim(-50, 200)
+ax.set_ylabel('Sea Level [cm]', fontsize=20)
+ax.set_xlabel('Days of November 2019', fontsize=20)
+ax.set_title('Original Sea Level observations and MedFS forecast at ISMAR_TG', fontsize=20)
+
+ax.grid(True)
+ax.legend(loc='upper left', fontsize=18)
+
+# x-axis
+ax.xaxis.set_major_locator(mdates.DayLocator())
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%d %b'))
+ax.xaxis.set_minor_locator(mdates.HourLocator(interval=6))
+ax.xaxis.set_minor_formatter(mdates.DateFormatter('%H:%M'))
+plt.setp(ax.get_xticklabels(which='major'), fontsize=16, weight='bold')
+plt.setp(ax.get_xticklabels(which='minor'), fontsize=16, color='gray')
+plt.setp(ax.get_yticklabels(), fontsize=16)
+ax.grid(which='major', axis='both', linestyle='-', linewidth=0.8, color='black')     # ogni giorno
+ax.grid(which='minor', axis='x', linestyle='--', linewidth=0.5, color='gray')     # ogni 6 ore
+ax.tick_params(axis='x', which='minor', length=4)
+ax.grid(True, which='both')
+
+# Save the plot
+plt.tight_layout()
+plt.savefig('sea_level_ISMAR_TG_originalplot.png', dpi=300)
+
+# === Plot 2: Sea Level + offset ===
+
+# === Mean analysis and offset setting ===
+# Set the model offset
+if offset_type == 0 :
+   mean_4_offset =  obs_hourly[0]
+   print ('Offset:',mean_4_offset)
+
+   bt = bt - bt[0] + mean_4_offset  
+   bc = bc - bc[0] + mean_4_offset 
+   bc9 = bc9 - bc9[0] + mean_4_offset 
+   obs_hourly = obs_hourly 
+   obs_hf = obs_hf 
+   tpxo = tpxo - np.nanmean(tpxo) + mean_4_offset
+   print ('MedFS (EAS6,EAS9) 0:', bc[0], bc9[0])
+   print ('BT MedFS 0:', bt[0])
+
+elif offset_type == 1 :
+   mean_4_offset =  np.nanmean(obs_hourly) 
+   print ('Offset:',mean_4_offset)
+
+   bt = bt - np.nanmean(bt) + mean_4_offset  
+   bc = bc - np.nanmean(bc) + mean_4_offset  
+   bc9 = bc9 - np.nanmean(bc9) + mean_4_offset
+   obs_hourly = obs_hourly 
+   obs_hf = obs_hf 
+   tpxo = tpxo - np.nanmean(tpxo) + mean_4_offset
+   print ('EAS6 MedFS mean:',np.nanmean(bc))
+   print ('EAS9 MedFS mean:',np.nanmean(bc9))
+   print ('BT MedFS mean:',np.nanmean(bt))
+
+elif offset_type == 2 :
+   obs_paper_mean   =  0.76  # OBS Mean at ISMAR_TG = 0.76 (10-15 Nov) or  = 0.71 (10-12 Nov)
+   mod_mean6        = -0.0995   # Nov 2019 Mean at ISMAR TG
+   mod_meanbt       = 0.2318   # Nov 2019 Mean at ISMAR_TG
+   mod_mean9        = mod_mean6 # Nov 2019 Mean at ISMAR_TG
+   tpxo_mean        = -0.0004   # Nov 2019 Mean at ISMAR_TG
+
+   # m -> cm
+   mean_4_offset =  obs_paper_mean*100
+   print ('Offset:',mean_4_offset)
+   mod_mean6  = mod_mean6*100
+   mod_meanbt = mod_meanbt*100
+   mod_mean9  = mod_mean9*100  
+   tpxo_mean  = tpxo_mean*100
+
+   bt = bt - mod_meanbt + mean_4_offset
+   bc = bc - mod_mean6 + mean_4_offset
+   bc9 = bc9 - mod_mean6 + mean_4_offset
+   obs_hourly = obs_hourly
+   obs_hf = obs_hf
+   tpxo = tpxo - np.nanmean(tpxo) + mean_4_offset
+   print ('EAS6 MedFS mean:',mod_mean6)
+   print ('EAS9 MedFS mean:',mod_mean6)
+   print ('BT MedFS mean:',mod_meanbt)
+
+elif offset_type == 3 :
+
+   mean_4_offset =  obs_Nov_1_10
+   print ('Offset:',mean_4_offset)
+
+   bt = bt - np.nanmean(bt) + mean_4_offset
+   bc = bc - np.nanmean(bc) + mean_4_offset
+   bc9 = bc9 - np.nanmean(bc9) + mean_4_offset
+   obs_hourly = obs_hourly
+   obs_hf = obs_hf
+   tpxo = tpxo - np.nanmean(tpxo) + mean_4_offset
+   print ('EAS6 MedFS mean:',np.nanmean(bc))
+   print ('EAS9 MedFS mean:',np.nanmean(bc9))
+   print ('BT MedFS mean:',np.nanmean(bt))
+
+elif offset_type == 4 :
+
+   mean_4_offset =  obs_10Oct_10Nov_2019
+   print ('Offset:',mean_4_offset)
+
+   bt = bt - np.nanmean(bt) + mean_4_offset
+   bc = bc - np.nanmean(bc) + mean_4_offset
+   bc9 = bc9 - np.nanmean(bc9) + mean_4_offset
+   obs_hourly = obs_hourly
+   obs_hf = obs_hf
+   tpxo = tpxo - np.nanmean(tpxo) + mean_4_offset
+   print ('EAS6 MedFS mean:',np.nanmean(bc))
+   print ('EAS9 MedFS mean:',np.nanmean(bc9))
+   print ('BT MedFS mean:',np.nanmean(bt))
+
+# === Peaks analysis ===
+peak_bt = np.nanmax(bt)
+peak_bc = np.nanmax(bc)
+peak_bc9 = np.nanmax(bc9)
+peak_obs_hourly = np.nanmax(obs_hourly)
+peak_obs_hf = np.nanmax(obs_hf)
+
+fig, ax = plt.subplots(figsize=(12, 8))
+plt.rc('font', size=20)
+
+# Time series
+ax.plot(time_bc9, bc9, color='tab:orange', label=f'EAS9 MedFS forecast (12 November peak = {int(peak_bc9)} cm)')
+ax.plot(time_bc, bc, color='tab:green', label=f'EAS6 MedFS forecast (12 November peak = {int(peak_bc)} cm)')
+ax.plot(time_bt, bt, color='lime', label=f'BT MedFS forecast (12 November peak = {int(peak_bt)} cm)')
+ax.plot(time_obs_hf, obs_hf, 'b--', linewidth=2, label=f'10 min freq. OBS (12 November peak = {int(peak_obs_hf)} cm)')
+ax.plot(time_obs_hourly, obs_hourly, 'o-', color='navy', label=f'Hourly OBS (12 November peak = {int(peak_obs_hourly)} cm)', markersize=4)
+#ax.plot(time_tpxo, tpxo, 'k--', label='Tides TPXO9')
+
+# Extreme threshold 
+ax.axhline(140, color='red', linewidth=1.5, label='Extreme floods threshold (140 cm)')
+
+# Highlight the 12 novembre 2019 AA event
+gray_start = datetime(2019, 11, 12, 18)
+gray_end = datetime(2019, 11, 12, 22)
+ax.axvspan(gray_start, gray_end, color='grey', alpha=0.3)
+
+# Layout e legenda
+ax.set_xlim(start_time, end_time)
+ax.set_ylim(0, 200)
+ax.set_ylabel('Sea Level [cm]', fontsize=20)
+ax.set_xlabel('Days of November 2019', fontsize=20)
+ax.set_title('Sea Level observations and MedFS forecast at ISMAR_TG', fontsize=20)
+
+ax.grid(True)
+ax.legend(loc='upper left', fontsize=18)
+
+# x-axis
+ax.xaxis.set_major_locator(mdates.DayLocator())
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%d %b'))
+ax.xaxis.set_minor_locator(mdates.HourLocator(interval=6))
+ax.xaxis.set_minor_formatter(mdates.DateFormatter('%H:%M'))
+plt.setp(ax.get_xticklabels(which='major'), fontsize=16, weight='bold')
+plt.setp(ax.get_xticklabels(which='minor'), fontsize=16, color='gray')
+plt.setp(ax.get_yticklabels(), fontsize=16)
+ax.grid(which='major', axis='both', linestyle='-', linewidth=0.8, color='black')     # ogni giorno
+ax.grid(which='minor', axis='x', linestyle='--', linewidth=0.5, color='gray')     # ogni 6 ore
+ax.tick_params(axis='x', which='minor', length=4)
+ax.grid(True, which='both')
+
+# Save the plot
+plt.tight_layout()
+plt.savefig('sea_level_ISMAR_TG_newplot_'+str(offset_type)+'.png', dpi=300)
+
+# === Plot 3: Sea Level Anomaly ===
+
+# Anomaly time-series
+bt = bt-np.nanmean(bt)
+bc = bc-np.nanmean(bc)
+bc9 = bc9-np.nanmean(bc9)
+obs_hourly = obs_hourly-np.nanmean(obs_hourly)
+obs_hf = obs_hf-np.nanmean(obs_hf)
+
+# Anomaly peaks
+peak_bt = np.nanmax(bt)
+peak_bc = np.nanmax(bc)
+peak_bc9 = np.nanmax(bc9)
+peak_obs_hourly = np.nanmax(obs_hourly)
+peak_obs_hf = np.nanmax(obs_hf)
+
+fig, ax = plt.subplots(figsize=(12, 8))
+plt.rc('font', size=20)
+
+# Time series
+ax.plot(time_bc9, bc9, color='tab:orange', label=f'MedFS forecast (12 November peak = {int(peak_bc9)} cm)')
+ax.plot(time_bc, bc, color='tab:green', label=f'MedFS forecast (12 November peak = {int(peak_bc)} cm)')
+ax.plot(time_bt, bt, color='lime', label=f'BT MedFS forecast (12 November peak = {int(peak_bt)} cm)')
+ax.plot(time_obs_hf, obs_hf, 'b--', linewidth=2, label=f'10 min freq. OBS (12 November peak = {int(peak_obs_hf)} cm)')
+ax.plot(time_obs_hourly, obs_hourly, 'o-', color='navy', label=f'Hourly OBS (12 November peak = {int(peak_obs_hourly)} cm)', markersize=4)
+#ax.plot(time_tpxo, tpxo, 'k--', label='Tides TPXO9')
+
+# Higlight the 0 val
+ax.axhline(0, color='black', linewidth=2.5, label='')
+
+# Highlight the 12 novembre 2019 AA event
+gray_start = datetime(2019, 11, 12, 18)
+gray_end = datetime(2019, 11, 12, 22)
+ax.axvspan(gray_start, gray_end, color='grey', alpha=0.3)
+
+# Layout e legenda
+ax.set_xlim(start_time, end_time)
+ax.set_ylim(-125, 125)
+ax.set_ylabel('Sea Level - Sea Level Avg [cm]', fontsize=20)
+ax.set_xlabel('Days of November 2019', fontsize=20)
+ax.set_title('Sea Level anomaly (observations and MedFS forecast) at ISMAR_TG', fontsize=20)
+
+ax.grid(True)
+ax.legend(loc='upper left', fontsize=18)
+
+ax.xaxis.set_major_locator(mdates.DayLocator())
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%d %b'))
+ax.xaxis.set_minor_locator(mdates.HourLocator(interval=6))
+ax.xaxis.set_minor_formatter(mdates.DateFormatter('%H:%M'))
+plt.setp(ax.get_xticklabels(which='major'), fontsize=16, weight='bold')
+plt.setp(ax.get_xticklabels(which='minor'), fontsize=16, color='gray')
+plt.setp(ax.get_yticklabels(), fontsize=16)
+ax.grid(which='major', axis='both', linestyle='-', linewidth=0.8, color='black')     # ogni giorno
+ax.grid(which='minor', axis='x', linestyle='--', linewidth=0.5, color='gray')     # ogni 6 ore
+ax.tick_params(axis='x', which='minor', length=4)
+ax.grid(True, which='both')
+
+# Save the plot
+plt.tight_layout()
+plt.savefig('sea_level_ISMAR_TG_anomalyplot.png', dpi=300)
+
