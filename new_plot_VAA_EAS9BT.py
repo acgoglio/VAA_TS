@@ -52,6 +52,7 @@ def read_csv_series_10min(filename):
 # === Read data ===
 time_bt, bt = read_nc_series('ISMAR_TG_mod_EAS9BT_FC_w10.nc', 'sossheig')
 time_bc, bc = read_nc_series('ISMAR_TG_mod_EAS6_FCall_20191110_w10.nc', 'sossheig')
+time_an6,an6 = read_nc_series('ISMAR_TG_mod_eas6_an.nc','zos','time')
 time_bc9, bc9 = read_nc_series('ISMAR_TG_mod_EAS9BC_FC_w10.nc', 'sossheig')
 time_tpxo, tpxo = read_nc_series('ISMAR_TG_tpxo.nc', 'tide_z', timevar='time') 
 
@@ -76,6 +77,7 @@ def filter_time(t, x, ini_t, end_t):
 # Obs avgs (m->cm)
 obs_clim_1983_2020 = 0.37
 time_nov_2019, obs_Nov_2019                 = filter_time(time_obs_hourly, obs_hourly, datetime(2019,11,1), datetime(2019,12,1))
+time_oct_2019, obs_Oct_2019                 = filter_time(time_obs_hourly, obs_hourly, datetime(2019,10,1), datetime(2019,11,1))
 time_oct10_nov10_2019, obs_10Oct_10Nov_2019 = filter_time(time_obs_hourly, obs_hourly, datetime(2019,10,10), datetime(2019,11,11))
 time_nov_1_10, obs_Nov_1_10                 = filter_time(time_obs_hourly, obs_hourly, datetime(2019,11,1), datetime(2019,11,10))
 time_nov_10_12, obs_Nov_10_12               = filter_time(time_obs_hourly, obs_hourly, datetime(2019,11,10), datetime(2019,11,13))
@@ -86,6 +88,7 @@ time_nov_10_17, obs_Nov_10_17               = filter_time(time_obs_hourly, obs_h
 
 obs_clim_1983_2020   = obs_clim_1983_2020*100
 obs_Nov_2019         = np.nanmean(obs_Nov_2019)
+obs_Oct_2019         = np.nanmean(obs_Oct_2019)
 obs_10Oct_10Nov_2019 = np.nanmean(obs_10Oct_10Nov_2019)
 obs_Nov_1_10         = np.nanmean(obs_Nov_1_10)
 obs_Nov_10_12        = np.nanmean(obs_Nov_10_12)
@@ -156,11 +159,12 @@ fig, ax = plt.subplots(figsize=(16, 8))
 plt.rc('font', size=16)
 
 # Colormap Blues
-y_values = [obs_clim_1983_2020, obs_10Oct_10Nov_2019, obs_Nov_2019, obs_Nov_1_10, obs_Nov_10_12, obs_Nov_10_125, obs_Nov_10_13, obs_Nov_10_15, obs_Nov_10_17]
+y_labels = ['Obs clim 1983-2020:', 'Obs Oct 2019 avg:', 'Obs Nov 2019 avg:', 'Obs Nov 10-17 avg:']
+y_values = [obs_clim_1983_2020, obs_Oct_2019, obs_Nov_2019, obs_Nov_10_17]
 cmap = plt.cm.get_cmap('cool', len(y_values))
 
 # Plot the avg values
-ax.set_xlim(datetime(2019,10,10), datetime(2019,11,30))
+ax.set_xlim(datetime(2019,10,1), datetime(2019,12,1))
 for i, y in enumerate(y_values):
     y_val = float(np.squeeze(y))
     ax.axhline(y_val, color=cmap(i), linewidth=2.5, label=y_labels[i]+' '+str(round(y_values[i],1))+' cm')
@@ -169,6 +173,11 @@ for i, y in enumerate(y_values):
 ax.plot(time_obs_hf, obs_hf, 'b--', linewidth=2, label=f'10 min freq. OBS (12 November peak = {int(peak_obs_hf)} cm)')
 ax.plot(time_obs_hourly, obs_hourly, 'o-', color='navy', label=f'Hourly OBS (12 November peak = {int(peak_obs_hourly)} cm)', markersize=4)
 #ax.plot(time_tpxo, tpxo, 'k--', label='Tides TPXO9')
+
+# MedFS Analysis
+#time_an6, an6 = filter_time(time_an6, an6, datetime(2019,10,1), datetime(2019,12,1))
+#peak_an6 = np.nanmax(an6)
+#ax.plot(time_an6, an6, color='olive', label=f'EAS6 MedFS analysis (12 November peak = {int(peak_an6)} cm)')
 
 # Highlight the 12 novembre 2019 AA event
 gray_start = datetime(2019, 11, 12, 18)
@@ -220,13 +229,18 @@ peak_bc9 = np.nanmax(bc9)
 peak_obs_hourly = np.nanmax(obs_hourly)
 peak_obs_hf = np.nanmax(obs_hf)
 
+# === Mean analysis ===
+mean_bt = np.nanmean(bt)
+mean_bc = np.nanmean(bc)
+mean_bc9 = np.nanmean(bc9)
+
 fig, ax = plt.subplots(figsize=(12, 8))
 plt.rc('font', size=20)
 
 # Time series
-ax.plot(time_bc9, bc9, color='tab:orange', label=f'EAS9 MedFS forecast (12 November peak = {int(peak_bc9)} cm)')
-ax.plot(time_bc, bc, color='tab:green', label=f'EAS6 MedFS forecast (12 November peak = {int(peak_bc)} cm)')
-ax.plot(time_bt, bt, color='lime', label=f'BT MedFS forecast (12 November peak = {int(peak_bt)} cm)')
+ax.plot(time_bc9, bc9, color='tab:orange', label=f'EAS9 MedFS forecast (12 November peak = {int(peak_bc9)} cm, mean ={int(mean_bc9)} cm)')
+ax.plot(time_bc, bc, color='tab:green', label=f'EAS6 MedFS forecast (12 November peak = {int(peak_bc)} cm, mean ={int(mean_bc)} cm)')
+ax.plot(time_bt, bt, color='lime', label=f'BT MedFS forecast (12 November peak = {int(peak_bt)} cm, mean ={int(mean_bt)} cm)')
 ax.plot(time_obs_hf, obs_hf, 'b--', linewidth=2, label=f'10 min freq. OBS (12 November peak = {int(peak_obs_hf)} cm)')
 ax.plot(time_obs_hourly, obs_hourly, 'o-', color='navy', label=f'Hourly OBS (12 November peak = {int(peak_obs_hourly)} cm)', markersize=4)
 #ax.plot(time_tpxo, tpxo, 'k--', label='Tides TPXO9')
@@ -443,7 +457,7 @@ ax.axvspan(gray_start, gray_end, color='grey', alpha=0.3)
 # Layout e legenda
 ax.set_xlim(start_time, end_time)
 ax.set_ylim(-125, 125)
-ax.set_ylabel('Sea Level - Sea Level Avg [cm]', fontsize=20)
+ax.set_ylabel('Sea Level Anomaly [cm]', fontsize=20)
 ax.set_xlabel('Days of November 2019', fontsize=20)
 ax.set_title('Sea Level anomaly (observations and MedFS forecast) at ISMAR_TG', fontsize=20)
 
