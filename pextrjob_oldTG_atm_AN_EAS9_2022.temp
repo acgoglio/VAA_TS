@@ -227,7 +227,8 @@ set -e
            LAT_INT=$( echo $LAT_TOCUT | cut -f 1 -d"." )
            echo "PROVA $TSEXT"
            #cdo seltimestep,1,2,3,4,5,6,7,8 $TSEXT ts_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc
-           cp $TSEXT ts_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc
+           #cp $TSEXT ts_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc
+           cdo expr,"${VAR}=${VAR}*1" $TSEXT ts_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc
            cdo sellonlatbox,$(( ${LON_INT} - 2 )),$(( ${LON_INT} + 2 )),$(( ${LAT_INT} - 2 )),$(( ${LAT_INT} + 2 )) ts_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc red_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc
            cdo setctomiss,0.0000 red_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc miss_${TS_IDX}_${COO_TS_NAME[$TS_IDX]}.nc
 
