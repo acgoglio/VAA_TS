@@ -73,7 +73,8 @@ echo "Job path/name: ${ANA_WORKDIR}/${JOB_TORUN}"
 # Run the job
 echo "Submitting job ${J_NAME} to queue ${J_QUEUE} (Good luck!).."
 #bsub -P ${J_PROJ} -M 100G <${ANA_WORKDIR}/${JOB_TORUN}
-bsub -n 1 -q s_medium -P 0723 -M 40G -o out -e err <${ANA_WORKDIR}/${JOB_TORUN}
+echo "bsub -n 1 -q ${J_QUEUE} -P 0723 -M 40G -o out -e err <${ANA_WORKDIR}/${JOB_TORUN}"
+bsub -n 1 -q ${J_QUEUE} -P 0723 -M 40G -o out -e err <${ANA_WORKDIR}/${JOB_TORUN}
 echo "Check the output in ${ANA_WORKDIR} and/or the errors in ${J_ERR}!"
 
 
